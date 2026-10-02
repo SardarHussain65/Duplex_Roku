@@ -63,9 +63,7 @@ function DuplexGetHardwareId() as String
 end function
 
 function DuplexGetDisplayCode(hardwareId as String) as String
-    if Instr(1, hardwareId, ":") > 0
-        return UCase(hardwareId)
-    end if
+    ' Match Web TV formatDisplayCode — always DPX - XXXXYYYY (even for colon MACs).
     return DuplexFormatDisplayCode(hardwareId)
 end function
 

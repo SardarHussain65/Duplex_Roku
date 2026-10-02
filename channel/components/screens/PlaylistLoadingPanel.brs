@@ -1,16 +1,18 @@
-' PlaylistLoadingPanel component script. Markup lives in PlaylistLoadingPanel.xml.
+' PlaylistLoadingPanel — Web TV PlaylistLoadingScreen visual/copy parity.
 sub init()
   m.top.focusable = true
   m.stepOrder = ["connecting", "liveTv", "movies", "series", "finalizing"]
   m.stepLabels = {
-    connecting: "Connecting to server"
-    liveTv: "Loading Live TV"
-    movies: "Loading Movies"
-    series: "Loading Series"
-    finalizing: "Finalizing setup"
+    connecting: "Connecting to playlist source"
+    liveTv: "Loading Live TV channels"
+    movies: "Loading movies"
+    series: "Loading series"
+    finalizing: "Preparing your home screen"
   }
   m.stepStatus = {}
   m.phase = "idle"
+  m.spinFrame = 0
+  m.spinIcons = []
 
   for each stepKey in m.stepOrder
     m.stepStatus[stepKey] = "pending"
@@ -21,12 +23,17 @@ sub init()
   styleLabel(m.top.findNode("errorIcon"), 36, "0xCC1C6AFF")
   styleLabel(m.top.findNode("errorTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("errorCopy"), 22, "0xD6D8E0FF")
-  styleLabel(m.top.findNode("errorBackText"), 22, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("errorBackText"), 22, "0x111111FF")
 
   m.task = m.top.createChild("PlaylistPrepareTask")
   m.task.observeField("stepUpdate", "onStepUpdate")
   m.task.observeField("complete", "onPrepareComplete")
   m.task.observeField("error", "onPrepareError")
+
+  m.spinTimer = m.top.createChild("Timer")
+  m.spinTimer.duration = 0.12
+  m.spinTimer.repeat = true
+  m.spinTimer.observeField("fire", "onSpinTick")
 
   renderSteps()
 end sub
@@ -43,17 +50,22 @@ sub onPanelShown()
   if playlist <> invalid and playlist.name <> invalid and playlist.name <> ""
     name = playlist.name
   end if
-  m.top.findNode("subtitle").text = "Preparing " + name + "..."
+  m.top.findNode("title").text = "Preparing Your Playlist"
+  m.top.findNode("subtitle").text = "Setting up " + name + " — this will only take a moment."
 
   m.top.findNode("loadingRoot").visible = true
   m.top.findNode("errorRoot").visible = false
+  m.top.readySelected = false
+  m.top.backSelected = false
 
   for i = 0 to m.stepOrder.Count() - 1
     m.stepStatus[m.stepOrder[i]] = "pending"
   end for
   m.phase = "loading"
+  m.spinFrame = 0
   m.top.findNode("trackFill").width = 0
   renderSteps()
+  m.spinTimer.control = "start"
 
   playlistId = ""
   if playlist <> invalid and playlist.id <> invalid
@@ -62,6 +74,15 @@ sub onPanelShown()
 
   m.task.playlistId = playlistId
   m.task.control = "RUN"
+end sub
+
+sub onSpinTick()
+  if m.phase <> "loading" then return
+  m.spinFrame = (m.spinFrame + 1) mod 4
+  uri = "pkg:/images/ui/load-step-spin-" + m.spinFrame.ToStr() + ".png"
+  for each icon in m.spinIcons
+    if icon <> invalid then icon.uri = uri
+  end for
 end sub
 
 sub onStepUpdate()
@@ -78,13 +99,21 @@ end sub
 
 sub updateProgress()
   doneCount = 0
+  loadingCount = 0
   for i = 0 to m.stepOrder.Count() - 1
-    if m.stepStatus[m.stepOrder[i]] = "done"
+    st = m.stepStatus[m.stepOrder[i]]
+    if st = "done"
       doneCount = doneCount + 1
+    else if st = "loading"
+      loadingCount = loadingCount + 1
     end if
   end for
-  pct = doneCount / m.stepOrder.Count()
-  m.top.findNode("trackFill").width = Int(920 * pct)
+  ' Partial credit for in-progress step (matches Web feel)
+  pct = (doneCount + loadingCount * 0.45) / m.stepOrder.Count()
+  w = Int(920 * pct)
+  if w < 8 and pct > 0 then w = 8
+  if w > 920 then w = 920
+  m.top.findNode("trackFill").width = w
 end sub
 
 sub renderSteps()
@@ -92,51 +121,31 @@ sub renderSteps()
   while root.getChildCount() > 0
     root.removeChildIndex(0)
   end while
+  m.spinIcons = []
 
-  rowH = 56
+  rowH = 64 ' ~28px gap matching Web card spacing
   for i = 0 to m.stepOrder.Count() - 1
     stepKey = m.stepOrder[i]
     status = m.stepStatus[stepKey]
     row = root.createChild("Group")
     row.translation = [0, i * rowH]
 
-    iconBg = row.createChild("Rectangle")
-    iconBg.translation = [0, 2]
-    iconBg.width = 36
-    iconBg.height = 36
+    icon = row.createChild("Poster")
+    icon.width = 36
+    icon.height = 36
+    icon.loadDisplayMode = "scaleToFit"
     if status = "done"
-      iconBg.color = "0x0451DFFF"
+      icon.uri = "pkg:/images/ui/load-step-done.png"
     else if status = "loading"
-      iconBg.color = "0x588BEAFF"
+      icon.uri = "pkg:/images/ui/load-step-spin-" + m.spinFrame.ToStr() + ".png"
+      m.spinIcons.Push(icon)
     else
-      iconBg.color = "0x2A2D36FF"
-    end if
-
-    if status = "done"
-      check = row.createChild("Label")
-      check.translation = [8, 6]
-      check.width = 24
-      check.height = 24
-      check.text = "OK"
-      check.font.size = 14
-      check.color = "0xFFFFFFFF"
-    else if status = "loading"
-      ring = row.createChild("Rectangle")
-      ring.translation = [10, 10]
-      ring.width = 16
-      ring.height = 16
-      ring.color = "0xFFFFFFFF"
-    else
-      dot = row.createChild("Rectangle")
-      dot.translation = [14, 16]
-      dot.width = 8
-      dot.height = 8
-      dot.color = "0x777E90FF"
+      icon.uri = "pkg:/images/ui/load-step-pending.png"
     end if
 
     lbl = row.createChild("Label")
-    lbl.translation = [56, 6]
-    lbl.width = 760
+    lbl.translation = [56, 4]
+    lbl.width = 780
     lbl.height = 32
     lbl.text = m.stepLabels[stepKey]
     lbl.font.size = 24
@@ -153,10 +162,17 @@ end sub
 sub onPrepareComplete()
   DuplexLog("playlist ready → hub")
   m.phase = "done"
+  m.spinTimer.control = "stop"
+  for i = 0 to m.stepOrder.Count() - 1
+    m.stepStatus[m.stepOrder[i]] = "done"
+  end for
+  renderSteps()
+  m.top.findNode("trackFill").width = 920
   m.top.readySelected = true
 end sub
 
 sub onPrepareError()
+  m.spinTimer.control = "stop"
   showError(m.task.error)
 end sub
 
@@ -180,6 +196,7 @@ function handleKeyEvent(key as String) as Boolean
   end if
 
   if key = "back"
+    m.spinTimer.control = "stop"
     m.top.backSelected = true
     return true
   end if

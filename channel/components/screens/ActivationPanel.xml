@@ -3,6 +3,8 @@
   <interface>
     <field id="continueSelected" type="boolean" alwaysNotify="true" />
     <field id="quickSetupSelected" type="boolean" alwaysNotify="true" />
+    <field id="refreshSelected" type="boolean" alwaysNotify="true" />
+    <field id="exitSelected" type="boolean" alwaysNotify="true" />
     <function name="onPanelShown" />
     <function name="handleKeyEvent" />
   </interface>
@@ -10,64 +12,96 @@
   <children>
     <Rectangle id="background" width="1920" height="1080" color="0x121212FF" />
 
-    <!-- 960px column centered on 1920 canvas: left edge x = 480 -->
-    <Group id="contentRoot" translation="[480, 56]">
+    <!-- 960px column centered: x = 480 -->
+    <Group id="contentRoot" translation="[480, 40]">
 
       <Poster id="logo" translation="[436, 0]" uri="pkg:/images/logo.png" width="88" height="88" loadDisplayMode="scaleToFit" />
 
-      <Label id="heading" translation="[0, 108]" width="960" height="80" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" text="Your MAC address is activated" />
+      <Label id="heading" translation="[0, 108]" width="960" height="80" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" text="Your MAC is Activated!" />
 
       <Label
         id="copy"
         translation="[50, 196]"
         width="860"
-        height="90"
+        height="100"
         horizAlign="center"
         vertAlign="top"
         wrap="true"
-        maxLines="3"
-        text="Visit www.duplexnew.tv/manageplaylists to manage your playlists and account." />
+        maxLines="4"
+        text="Visit our website www.duplexnew.tv/manageplaylists to add/manage playlists." />
 
-      <!-- Trial banner -->
-      <Rectangle id="bannerBg" translation="[0, 300]" width="960" height="88" color="0x1F7A28FF" />
-      <Label id="bannerTitle" translation="[24, 314]" width="820" height="32" text="Trial Available" />
-      <Label id="bannerSub" translation="[24, 348]" width="820" height="28" text="Start your free trial to explore Duplex." />
-      <Poster id="bannerIcon" translation="[888, 320]" uri="pkg:/images/trial-badge.png" width="48" height="48" loadDisplayMode="scaleToFit" />
+      <!-- Green trial banner (trial + no expiry countdown) -->
+      <Group id="bannerGroup" translation="[0, 310]" visible="false">
+        <Poster id="bannerBg" width="960" height="88" uri="pkg:/images/ui/trial-banner.png" loadDisplayMode="scaleToFit" />
+        <Label id="bannerTitle" translation="[24, 14]" width="820" height="32" text="7-Day Free Trial Active!" />
+        <Label id="bannerSub" translation="[24, 48]" width="820" height="28" text="Enjoy your 7-day free trial! Activation will be required when the trial ends." />
+        <Poster id="bannerIcon" translation="[888, 20]" uri="pkg:/images/trial-badge.png" width="48" height="48" loadDisplayMode="scaleToFit" />
+      </Group>
 
-      <!-- ID boxes (left) -->
-      <Rectangle translation="[0, 424]" width="460" height="100" color="0x1C1C1EFF" />
-      <Label id="macLabel" translation="[24, 438]" width="412" height="24" text="MAC Address" />
-      <Label id="macValue" translation="[24, 468]" width="412" height="40" text="LOADING..." />
+      <!-- IDs + QR -->
+      <Group id="idsGroup" translation="[0, 420]" visible="true">
+        <Poster id="macBox" translation="[0, 0]" width="460" height="100" uri="pkg:/images/ui/id-box.png" loadDisplayMode="scaleToFit" />
+        <Label id="macLabel" translation="[24, 14]" width="412" height="24" text="Mac Address" />
+        <Label id="macValue" translation="[24, 44]" width="412" height="40" text="LOADING..." />
 
-      <Rectangle translation="[0, 540]" width="460" height="100" color="0x1C1C1EFF" />
-      <Label id="deviceLabel" translation="[24, 554]" width="412" height="24" text="Device ID" />
-      <Label id="deviceValue" translation="[24, 584]" width="412" height="40" text="Loading..." />
+        <Poster id="deviceBox" translation="[0, 116]" width="460" height="100" uri="pkg:/images/ui/id-box.png" loadDisplayMode="scaleToFit" />
+        <Label id="deviceLabel" translation="[24, 130]" width="412" height="24" text="Device ID" />
+        <Label id="deviceValue" translation="[24, 160]" width="412" height="40" text="LOADING..." />
 
-      <!-- QR (right) -->
-      <Rectangle translation="[560, 424]" width="220" height="220" color="0xFFFFFFFF" />
-      <Poster id="qrCode" translation="[570, 434]" width="200" height="200" loadDisplayMode="scaleToFit" />
-      <Label id="qrHint" translation="[560, 656]" width="220" height="24" horizAlign="center" text="Scan to activate" />
+        <Rectangle id="divider" translation="[508, 10]" width="2" height="200" color="0x3A3A3CFF" />
+
+        <Poster id="qrFrame" translation="[560, 0]" width="220" height="220" uri="pkg:/images/ui/qr-frame.png" loadDisplayMode="scaleToFit" />
+        <Poster id="qrCode" translation="[570, 10]" width="200" height="200" loadDisplayMode="scaleToFit" />
+        <Label id="qrHint" translation="[560, 232]" width="220" height="28" horizAlign="center" text="Scan to add playlist" />
+      </Group>
 
       <Label
         id="warning"
-        translation="[0, 696]"
+        translation="[0, 700]"
         width="960"
-        height="56"
+        height="64"
         horizAlign="center"
         vertAlign="top"
         wrap="true"
         maxLines="2"
         visible="false"
-        text="This app does not provide any content. You must enter your own content to proceed." />
+        text="This app does not provide any content such as live channels or VODs. You must enter your own content to proceed." />
 
-      <!-- Buttons centered -->
-      <Group id="continueBtn" translation="[230, 772]">
-        <Rectangle id="continueBg" width="240" height="64" color="0x0451DFFF" />
-        <Label id="continueText" translation="[0, 18]" width="240" height="32" horizAlign="center" text="Continue" />
+      <Label
+        id="footerCopy"
+        translation="[50, 700]"
+        width="860"
+        height="60"
+        horizAlign="center"
+        wrap="true"
+        maxLines="2"
+        visible="false"
+        text="Visit our website www.duplexnew.tv/manageplaylists to add/manage playlists." />
+
+      <!-- Action buttons (rounded Poster chrome; positions/uris set in script) -->
+      <Group id="btn0" translation="[0, 800]" visible="false">
+        <Poster id="btn0Bg" width="960" height="64" uri="pkg:/images/ui/btn-white-960.png" loadDisplayMode="scaleToFit" />
+        <Label id="btn0Text" translation="[0, 18]" width="960" height="32" horizAlign="center" text="Continue" />
       </Group>
-      <Group id="quickSetupBtn" translation="[490, 772]">
-        <Rectangle id="quickSetupBg" width="240" height="64" color="0x2C2C2EFF" />
-        <Label id="quickSetupText" translation="[0, 18]" width="240" height="32" horizAlign="center" text="Quick Setup" />
+      <Group id="btn1" translation="[0, 800]" visible="false">
+        <Poster id="btn1Bg" width="564" height="64" uri="pkg:/images/ui/btn-dark-564.png" loadDisplayMode="scaleToFit" />
+        <Label id="btn1Text" translation="[0, 18]" width="564" height="32" horizAlign="center" text="Quick Setup" />
+      </Group>
+    </Group>
+
+    <!-- Exit confirm overlay -->
+    <Group id="exitConfirm" visible="false">
+      <Rectangle width="1920" height="1080" color="0x000000CC" />
+      <Poster translation="[560, 360]" width="800" height="280" uri="pkg:/images/ui/dialog.png" loadDisplayMode="scaleToFit" />
+      <Label id="exitTitle" translation="[560, 400]" width="800" height="48" horizAlign="center" text="Exit App?" />
+      <Label id="exitMsg" translation="[600, 460]" width="720" height="40" horizAlign="center" text="Are you sure you want to exit?" />
+      <Group id="exitNoBtn" translation="[620, 540]">
+        <Poster id="exitNoBg" width="280" height="56" uri="pkg:/images/ui/btn-outline-280.png" loadDisplayMode="scaleToFit" />
+        <Label id="exitNoText" translation="[0, 14]" width="280" height="28" horizAlign="center" text="Cancel" />
+      </Group>
+      <Group id="exitYesBtn" translation="[980, 540]">
+        <Poster id="exitYesBg" width="280" height="56" uri="pkg:/images/ui/btn-white-280.png" loadDisplayMode="scaleToFit" />
+        <Label id="exitYesText" translation="[0, 14]" width="280" height="28" horizAlign="center" text="Exit App" />
       </Group>
     </Group>
   </children>

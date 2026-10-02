@@ -12,10 +12,10 @@ sub init()
   m.fieldKeys = ["playlistName", "serverUrl", "username", "password"]
   m.fieldValues = { playlistName: "", serverUrl: "", username: "", password: "" }
   m.placeholders = {
-    playlistName: "Enter playlist name"
-    serverUrl: "http://example.com:8080"
-    username: "Enter username"
-    password: "Enter password"
+    playlistName: "Enter Playlist Name"
+    serverUrl: "Enter URL"
+    username: "Enter Username"
+    password: "Enter Password"
   }
 
   styleLabel(m.top.findNode("title"), 36, "0xFFFFFFFF")
@@ -95,27 +95,29 @@ end function
 
 sub applyPlaylistType()
   isXc = m.playlistType = "XC"
-  m.top.findNode("title").text = iff(isXc, "Add Xtream Codes Playlist", "Add URL Playlist")
-  m.top.findNode("subtitle").text = iff(isXc, "Enter your Xtream Codes server details to add a new playlist.", "Enter a direct M3U or playlist URL to add a new source.")
-  m.top.findNode("label1").text = iff(isXc, "Server DNS", "Playlist URL")
-  m.top.findNode("input1").text = iff(isXc, m.placeholders.serverUrl, "http://example.com/get.php?...")
+  m.top.findNode("title").text = iff(isXc, "Add Xtream Codes Playlist", "Add Playlist URL")
+  m.top.findNode("subtitle").text = iff(isXc, "Enter the playlist credentials to add up in the device.", "Enter the playlist URL to add up in the device.")
+  m.top.findNode("label1").text = iff(isXc, "Server/DNS", "Playlist URL")
   m.top.findNode("label2").visible = isXc
   m.top.findNode("input2Bg").visible = isXc
   m.top.findNode("input2").visible = isXc
   m.top.findNode("label3").visible = isXc
   m.top.findNode("input3Bg").visible = isXc
   m.top.findNode("input3").visible = isXc
+  layoutFormActions()
+  updateAllFieldDisplays()
+end sub
 
-  if isXc
-    m.top.findNode("tabXcBg").color = "0x23262FFF"
-    m.top.findNode("tabXcText").color = "0xFFFFFFFF"
-    m.top.findNode("tabUrlBg").color = "0x00000001"
-    m.top.findNode("tabUrlText").color = "0x777E90FF"
+' Keep Cancel/Confirm clearly below the last visible field (no overlap).
+sub layoutFormActions()
+  ' formRoot y=328. XC last input bottom = 380+64 = 444 → absolute 772
+  ' URL last input bottom = 148+64 = 212 → absolute 540
+  if m.playlistType = "XC"
+    m.top.findNode("errorLabel").translation = [0, 788]
+    m.top.findNode("actionsRoot").translation = [0, 820]
   else
-    m.top.findNode("tabUrlBg").color = "0x23262FFF"
-    m.top.findNode("tabUrlText").color = "0xFFFFFFFF"
-    m.top.findNode("tabXcBg").color = "0x00000001"
-    m.top.findNode("tabXcText").color = "0x777E90FF"
+    m.top.findNode("errorLabel").translation = [0, 568]
+    m.top.findNode("actionsRoot").translation = [0, 600]
   end if
 end sub
 
@@ -129,7 +131,7 @@ sub updateFieldDisplay(index as Integer)
   value = m.fieldValues[key]
   placeholder = m.placeholders[key]
   if index = 1 and m.playlistType = "URL"
-    placeholder = "http://example.com/get.php?..."
+    placeholder = "Enter URL"
   end if
 
   labelNode = m.top.findNode("input" + index.ToStr())
@@ -173,41 +175,41 @@ sub updateFocusVisuals()
   tabUrlFocused = m.focusId = "tabUrl"
   xcActive = m.playlistType = "XC"
 
-  ' Active tab fill + strong focus ring (blue) when focused
-  if xcActive
-    m.top.findNode("tabXcBg").color = "0x23262FFF"
-    m.top.findNode("tabUrlBg").color = "0x00000001"
-  else
-    m.top.findNode("tabUrlBg").color = "0x23262FFF"
-    m.top.findNode("tabXcBg").color = "0x00000001"
-  end if
-
-  if tabXcFocused
-    m.top.findNode("tabXcBg").color = "0x0451DFFF"
+  ' Tabs: active + focused use blue-border art (Web #588bea)
+  if tabXcFocused or xcActive
+    m.top.findNode("tabXcBg").uri = "pkg:/images/ui/xtream-tab-active.png"
     m.top.findNode("tabXcText").color = "0xFFFFFFFF"
   else
-    m.top.findNode("tabXcText").color = iff(xcActive, "0xFFFFFFFF", "0x777E90FF")
+    m.top.findNode("tabXcBg").uri = "pkg:/images/ui/xtream-tab-idle.png"
+    m.top.findNode("tabXcText").color = "0x777E90FF"
   end if
 
-  if tabUrlFocused
-    m.top.findNode("tabUrlBg").color = "0x0451DFFF"
+  if tabUrlFocused or not xcActive
+    m.top.findNode("tabUrlBg").uri = "pkg:/images/ui/xtream-tab-active.png"
     m.top.findNode("tabUrlText").color = "0xFFFFFFFF"
   else
-    m.top.findNode("tabUrlText").color = iff(not xcActive, "0xFFFFFFFF", "0x777E90FF")
+    m.top.findNode("tabUrlBg").uri = "pkg:/images/ui/xtream-tab-idle.png"
+    m.top.findNode("tabUrlText").color = "0x777E90FF"
+  end if
+
+  ' Prefer focus ring on the focused tab even if the other is active
+  if tabXcFocused
+    m.top.findNode("tabXcBg").uri = "pkg:/images/ui/xtream-tab-focus.png"
+    m.top.findNode("tabXcText").color = "0xFFFFFFFF"
+  end if
+  if tabUrlFocused
+    m.top.findNode("tabUrlBg").uri = "pkg:/images/ui/xtream-tab-focus.png"
+    m.top.findNode("tabUrlText").color = "0xFFFFFFFF"
   end if
 
   for i = 0 to 3
     fieldId = "field" + i.ToStr()
-    ring = m.top.findNode("input" + i.ToStr() + "Ring")
     bg = m.top.findNode("input" + i.ToStr() + "Bg")
-    if ring <> invalid
+    if bg <> invalid
       if m.focusId = fieldId
-        ring.color = "0x588BEAFF"
-        ring.visible = true
-        if bg <> invalid then bg.color = "0x1A2744FF"
+        bg.uri = "pkg:/images/ui/xtream-input-focus.png"
       else
-        ring.visible = false
-        if bg <> invalid then bg.color = "0x1C1E24FF"
+        bg.uri = "pkg:/images/ui/xtream-input.png"
       end if
     end if
   end for
@@ -217,26 +219,21 @@ sub updateFocusVisuals()
   valid = isFormValid()
 
   if cancelFocused
-    m.top.findNode("cancelBg").color = "0xFFFFFFFF"
+    m.top.findNode("cancelBg").uri = "pkg:/images/ui/xtream-btn-cancel-focus.png"
     m.top.findNode("cancelText").color = "0x111111FF"
   else
-    m.top.findNode("cancelBg").color = "0x1C1E24FF"
+    m.top.findNode("cancelBg").uri = "pkg:/images/ui/xtream-btn-cancel.png"
     m.top.findNode("cancelText").color = "0xFFFFFFFF"
   end if
 
-  if confirmFocused
-    if valid
-      m.top.findNode("confirmBg").color = "0xFFFFFFFF"
-      m.top.findNode("confirmText").color = "0x111111FF"
-    else
-      m.top.findNode("confirmBg").color = "0x588BEAFF"
-      m.top.findNode("confirmText").color = "0xFFFFFFFF"
-    end if
+  if confirmFocused and valid
+    m.top.findNode("confirmBg").uri = "pkg:/images/ui/xtream-btn-confirm-focus.png"
+    m.top.findNode("confirmText").color = "0x111111FF"
   else if valid
-    m.top.findNode("confirmBg").color = "0x353945FF"
+    m.top.findNode("confirmBg").uri = "pkg:/images/ui/xtream-btn-confirm.png"
     m.top.findNode("confirmText").color = "0xFFFFFFFF"
   else
-    m.top.findNode("confirmBg").color = "0x353945FF"
+    m.top.findNode("confirmBg").uri = "pkg:/images/ui/xtream-btn-confirm-disabled.png"
     m.top.findNode("confirmText").color = "0x777E90FF"
   end if
 end sub

@@ -10,69 +10,72 @@
   <children>
     <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
 
-    <Group id="contentRoot" translation="[500, 40]">
+    <!-- 920px column centered → x = 500 -->
+    <Group id="contentRoot" translation="[500, 24]">
       <Group id="headerGroup">
-        <Poster id="logo" translation="[420, 0]" uri="pkg:/images/logo.png" width="80" height="80" loadDisplayMode="scaleToFit" />
+        <Poster id="logo" translation="[420, 0]" uri="pkg:/images/logo.png" width="72" height="72" loadDisplayMode="scaleToFit" />
 
-        <Rectangle id="pillBg" translation="[110, 96]" width="700" height="44" color="0x1C1E24FF" />
-        <Rectangle id="pillBorder" translation="[110, 96]" width="700" height="44" color="0x353945FF" />
-        <Label id="pillMac" translation="[130, 106]" width="300" height="28" text="MAC Address: 02:00:00:00:00:00" />
-        <Rectangle id="pillDivider" translation="[440, 110]" width="1" height="16" color="0x353945FF" />
-        <Label id="pillKey" translation="[460, 106]" width="320" height="28" text="Device Key: N/A" />
+        <!-- Identity pill -->
+        <Poster id="pillBg" translation="[110, 84]" width="700" height="44" uri="pkg:/images/ui/xtream-pill.png" loadDisplayMode="scaleToFit" />
+        <Label id="pillMac" translation="[130, 94]" width="300" height="28" text="MAC Address: DPX - 02000000" />
+        <Rectangle id="pillDivider" translation="[440, 98]" width="1" height="16" color="0x353945FF" />
+        <Label id="pillKey" translation="[460, 94]" width="320" height="28" text="Device Key: N/A" />
 
-        <Rectangle id="tabsBg" translation="[0, 168]" width="920" height="68" color="0x1C1E24FF" />
-        <Group id="tabXc" translation="[6, 174]">
-          <Rectangle id="tabXcBg" width="452" height="56" color="0x23262FFF" />
+        <!-- Tabs -->
+        <Poster id="tabsTrack" translation="[0, 144]" width="920" height="68" uri="pkg:/images/ui/xtream-tabs-track.png" loadDisplayMode="scaleToFit" />
+        <Group id="tabXc" translation="[8, 150]">
+          <Poster id="tabXcBg" width="452" height="56" uri="pkg:/images/ui/xtream-tab-active.png" loadDisplayMode="scaleToFit" />
           <Label id="tabXcText" translation="[0, 14]" width="452" height="32" horizAlign="center" text="Xtream Codes" />
         </Group>
-        <Group id="tabUrl" translation="[462, 174]">
-          <Rectangle id="tabUrlBg" width="452" height="56" color="0x00000001" />
+        <Group id="tabUrl" translation="[460, 150]">
+          <Poster id="tabUrlBg" width="452" height="56" uri="pkg:/images/ui/xtream-tab-idle.png" loadDisplayMode="scaleToFit" />
           <Label id="tabUrlText" translation="[0, 14]" width="452" height="32" horizAlign="center" text="Playlist URL" />
         </Group>
 
-        <Label id="title" translation="[0, 260]" width="920" height="48" horizAlign="center" text="Add Xtream Codes Playlist" />
+        <Label id="title" translation="[0, 228]" width="920" height="44" horizAlign="center" text="Add Xtream Codes Playlist" />
         <Label
           id="subtitle"
-          translation="[60, 314]"
+          translation="[60, 276]"
           width="800"
-          height="60"
+          height="40"
           horizAlign="center"
           wrap="true"
           maxLines="2"
-          text="Enter your Xtream Codes server details to add a new playlist." />
+          text="Enter the playlist credentials to add up in the device." />
       </Group>
 
-      <Group id="formRoot" translation="[0, 390]">
+      <!--
+        Field block height (label 28 + gap 8 + input 64 + field gap 20) = 120 per field.
+        4 fields → last input ends at y=428. formRoot + actions leave clear gap.
+      -->
+      <Group id="formRoot" translation="[0, 328]">
         <Label id="label0" translation="[0, 0]" width="920" height="28" text="Playlist Name" />
-        <Rectangle id="input0Ring" translation="[-3, 29]" width="926" height="70" color="0x00000001" visible="false" />
-        <Rectangle id="input0Bg" translation="[0, 32]" width="920" height="64" color="0x1C1E24FF" />
-        <Label id="input0" translation="[20, 48]" width="880" height="32" text="Enter playlist name" />
+        <Poster id="input0Bg" translation="[0, 32]" width="920" height="64" uri="pkg:/images/ui/xtream-input.png" loadDisplayMode="scaleToFit" />
+        <Label id="input0" translation="[20, 48]" width="880" height="32" text="Enter Playlist Name" />
 
-        <Label id="label1" translation="[0, 112]" width="920" height="28" text="Server DNS" />
-        <Rectangle id="input1Ring" translation="[-3, 141]" width="926" height="70" color="0x00000001" visible="false" />
-        <Rectangle id="input1Bg" translation="[0, 144]" width="920" height="64" color="0x1C1E24FF" />
-        <Label id="input1" translation="[20, 160]" width="880" height="32" text="http://example.com:8080" />
+        <Label id="label1" translation="[0, 116]" width="920" height="28" text="Server/DNS" />
+        <Poster id="input1Bg" translation="[0, 148]" width="920" height="64" uri="pkg:/images/ui/xtream-input.png" loadDisplayMode="scaleToFit" />
+        <Label id="input1" translation="[20, 164]" width="880" height="32" text="Enter URL" />
 
-        <Label id="label2" translation="[0, 224]" width="920" height="28" text="Username" />
-        <Rectangle id="input2Ring" translation="[-3, 253]" width="926" height="70" color="0x00000001" visible="false" />
-        <Rectangle id="input2Bg" translation="[0, 256]" width="920" height="64" color="0x1C1E24FF" />
-        <Label id="input2" translation="[20, 272]" width="880" height="32" text="Enter username" />
+        <Label id="label2" translation="[0, 232]" width="920" height="28" text="Username" />
+        <Poster id="input2Bg" translation="[0, 264]" width="920" height="64" uri="pkg:/images/ui/xtream-input.png" loadDisplayMode="scaleToFit" />
+        <Label id="input2" translation="[20, 280]" width="880" height="32" text="Enter Username" />
 
-        <Label id="label3" translation="[0, 336]" width="920" height="28" text="Password" />
-        <Rectangle id="input3Ring" translation="[-3, 365]" width="926" height="70" color="0x00000001" visible="false" />
-        <Rectangle id="input3Bg" translation="[0, 368]" width="920" height="64" color="0x1C1E24FF" />
-        <Label id="input3" translation="[20, 384]" width="880" height="32" text="Enter password" />
+        <Label id="label3" translation="[0, 348]" width="920" height="28" text="Password" />
+        <Poster id="input3Bg" translation="[0, 380]" width="920" height="64" uri="pkg:/images/ui/xtream-input.png" loadDisplayMode="scaleToFit" />
+        <Label id="input3" translation="[20, 396]" width="880" height="32" text="Enter Password" />
       </Group>
 
-      <Label id="errorLabel" translation="[0, 780]" width="920" height="32" horizAlign="center" visible="false" text="" />
+      <Label id="errorLabel" translation="[0, 788]" width="920" height="28" horizAlign="center" visible="false" text="" />
 
-      <Group id="actionsRoot" translation="[0, 820]">
+      <!-- Below password (328+444=772) + ~28px gap → 800 -->
+      <Group id="actionsRoot" translation="[0, 800]">
         <Group id="cancelBtn" translation="[0, 0]">
-          <Rectangle id="cancelBg" width="440" height="64" color="0x1C1E24FF" />
+          <Poster id="cancelBg" width="440" height="64" uri="pkg:/images/ui/xtream-btn-cancel.png" loadDisplayMode="scaleToFit" />
           <Label id="cancelText" translation="[0, 18]" width="440" height="32" horizAlign="center" text="Cancel" />
         </Group>
         <Group id="confirmBtn" translation="[480, 0]">
-          <Rectangle id="confirmBg" width="440" height="64" color="0x353945FF" />
+          <Poster id="confirmBg" width="440" height="64" uri="pkg:/images/ui/xtream-btn-confirm-disabled.png" loadDisplayMode="scaleToFit" />
           <Label id="confirmText" translation="[0, 18]" width="440" height="32" horizAlign="center" text="Confirm" />
         </Group>
       </Group>
@@ -80,7 +83,7 @@
 
     <Group id="keyboardHeader" translation="[500, 48]" visible="false">
       <Label id="kbFieldLabel" width="920" height="28" text="Playlist Name" />
-      <Rectangle id="kbFieldBg" translation="[0, 36]" width="920" height="64" color="0x1C1E24FF" />
+      <Poster id="kbFieldBg" translation="[0, 36]" width="920" height="64" uri="pkg:/images/ui/xtream-input-kb.png" loadDisplayMode="scaleToFit" />
       <Label id="kbFieldValue" translation="[20, 52]" width="880" height="32" text="" />
     </Group>
 

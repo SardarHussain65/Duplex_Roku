@@ -1,18 +1,18 @@
-' PlaylistSourcePanel component script. Markup lives in PlaylistSourcePanel.xml.
+' PlaylistSourcePanel — Web TV PlaylistSourceScreen layout/behavior parity.
 sub init()
   m.top.focusable = true
   m.focusArea = "list"
   m.focusIndex = 0
   m.scrollTop = 0
+  m.lastListIndex = 0
   m.playlists = []
-  m.cardSpacing = 112
+  m.cardSpacing = 116 ' 100 card + 16 gap (Web margin-top 16)
   m.cardHeight = 100
   m.listVisibleRows = 4
 
   styleLabel(m.top.findNode("title"), 40, "0xFFFFFFFF")
   styleLabel(m.top.findNode("subtitle"), 22, "0x9CA3AFFF")
   styleLabel(m.top.findNode("statusLabel"), 20, "0x9CA3AFFF")
-  styleLabel(m.top.findNode("addPlus"), 72, "0xFFFFFFFF")
   styleLabel(m.top.findNode("addTitle"), 26, "0xFFFFFFFF")
   styleLabel(m.top.findNode("addSub"), 20, "0x9CA3AFFF")
 
@@ -27,8 +27,12 @@ end sub
 sub onPanelShown()
   m.focusIndex = 0
   m.scrollTop = 0
+  m.lastListIndex = 0
   m.playlists = []
   clearListCards()
+  m.top.playlistSelected = invalid
+  m.top.addXtreamSelected = false
+  m.top.backSelected = false
 
   m.top.findNode("statusLabel").visible = true
   m.top.findNode("statusLabel").text = "Loading playlists..."
@@ -44,9 +48,7 @@ sub onPanelShown()
     updateAddFocus(false)
   end if
   scene = m.top.getScene()
-  if scene <> invalid
-    scene.setFocus(true)
-  end if
+  if scene <> invalid then scene.setFocus(true)
 end sub
 
 sub styleLabel(label as Object, size as Integer, color as String)
@@ -78,10 +80,10 @@ sub renderPlaylists()
     if url = invalid or url = ""
       url = "No URL provided"
     end if
-    card.cardUrl = DuplexTruncateUrl(url, 52)
-    tag = DuplexPlaylistTypeLabel(item.type)
-    card.cardTag = "# " + tag
-    card.cardFocused = (i = m.focusIndex)
+    card.cardUrl = DuplexTruncateUrl(url, 56)
+    ' Web tag: type label only (no "# ")
+    card.cardTag = DuplexPlaylistTypeLabel(item.type)
+    card.cardFocused = (m.focusArea = "list" and i = m.focusIndex)
   end for
 end sub
 
@@ -122,9 +124,19 @@ sub onPlaylistsLoaded()
   m.playlists = items
   m.top.findNode("statusLabel").visible = false
 
-  m.focusIndex = 0
-  m.scrollTop = 0
-  renderPlaylists()
+  if m.top.focusAddButton
+    m.focusArea = "add"
+    m.focusIndex = 0
+    m.scrollTop = 0
+    renderPlaylists()
+    updateAddFocus(true)
+  else
+    m.focusArea = "list"
+    m.focusIndex = 0
+    m.scrollTop = 0
+    renderPlaylists()
+    updateAddFocus(false)
+  end if
 
   print "Duplex: loaded " + items.Count().ToStr() + " playlists"
 end sub
@@ -151,14 +163,21 @@ sub onPlaylistsError()
 end sub
 
 sub updateAddFocus(focused as Boolean)
-  outer = m.top.findNode("addOuter")
-  inner = m.top.findNode("addInner")
+  ring = m.top.findNode("addRing")
+  fill = m.top.findNode("addFill")
   if focused
-    outer.color = "0xFFFFFFFF"
-    inner.color = "0x353945FF"
+    ring.uri = "pkg:/images/add-circle-focus.png"
+    fill.visible = true
   else
-    outer.color = "0x777E90FF"
-    inner.color = "0x141416FF"
+    ring.uri = "pkg:/images/add-circle-dashed.png"
+    fill.visible = false
+  end if
+
+  if focused
+    for i = 0 to m.listRoot.getChildCount() - 1
+      card = m.listRoot.getChild(i)
+      if card <> invalid then card.cardFocused = false
+    end for
   end if
 end sub
 
@@ -183,20 +202,21 @@ function handleKeyEvent(key as String) as Boolean
     if m.focusIndex >= m.playlists.Count()
       m.focusIndex = m.playlists.Count() - 1
     end if
+    m.lastListIndex = m.focusIndex
     updateListFocus()
     return true
   end if
 
   if key = "up" and m.focusArea = "list" and m.playlists.Count() > 0
     m.focusIndex = m.focusIndex - 1
-    if m.focusIndex < 0
-      m.focusIndex = 0
-    end if
+    if m.focusIndex < 0 then m.focusIndex = 0
+    m.lastListIndex = m.focusIndex
     updateListFocus()
     return true
   end if
 
   if key = "right" and m.focusArea = "list"
+    m.lastListIndex = m.focusIndex
     m.focusArea = "add"
     updateAddFocus(true)
     return true
@@ -204,7 +224,9 @@ function handleKeyEvent(key as String) as Boolean
 
   if key = "left" and m.focusArea = "add" and m.playlists.Count() > 0
     m.focusArea = "list"
+    m.focusIndex = m.lastListIndex
     updateAddFocus(false)
+    updateListFocus()
     return true
   end if
 

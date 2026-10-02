@@ -1,7 +1,7 @@
 function DuplexPlaylistTypeLabel(typeValue as String) as String
     lower = LCase(typeValue)
     if Instr(1, lower, "xtream") > 0 or Instr(1, lower, "xtreme") > 0 or Instr(1, lower, "xui") > 0 or lower = "xc"
-        return "Xtream Codes"
+        return "Xtreme Codes"
     end if
     return "Playlist URL"
 end function

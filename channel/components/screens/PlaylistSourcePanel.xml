@@ -12,13 +12,14 @@
   <children>
     <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
 
-    <Group id="contentRoot" translation="[320, 40]">
+    <!-- Web content width 1280 centered → x = 320 -->
+    <Group id="contentRoot" translation="[320, 48]">
       <Poster id="logo" translation="[592, 0]" uri="pkg:/images/logo.png" width="96" height="96" loadDisplayMode="scaleToFit" />
 
-      <Label id="title" translation="[0, 108]" width="1280" height="52" horizAlign="center" text="Select Playlist Source" />
+      <Label id="title" translation="[0, 116]" width="1280" height="52" horizAlign="center" text="Select Playlist Source" />
       <Label
         id="subtitle"
-        translation="[230, 168]"
+        translation="[230, 176]"
         width="820"
         height="70"
         horizAlign="center"
@@ -27,23 +28,24 @@
         maxLines="2"
         text="Select an existing playlist or add a new Xtream Codes playlist to configure your device." />
 
-      <!-- Left: playlist list -->
-      <Group id="listRoot" translation="[40, 268]" />
+      <!-- Main row: list | divider | add  (matches Web flex + vertical center) -->
+      <Group id="mainRow" translation="[0, 280]">
+        <Group id="listRoot" translation="[0, 0]" />
+        <Label id="statusLabel" translation="[0, 40]" width="720" height="80" wrap="true" maxLines="3" visible="false" text="Loading playlists..." />
 
-      <Label id="statusLabel" translation="[40, 268]" width="720" height="40" visible="false" text="Loading playlists..." />
+        <!-- divider centered against ~4-card list height -->
+        <Rectangle id="divider" translation="[748, 0]" width="2" height="448" color="0x353945FF" />
 
-      <Rectangle id="divider" translation="[780, 300]" width="1" height="300" color="0x353945FF" />
-
-      <!-- Right: add Xtream -->
-      <Group id="addPanel" translation="[870, 320]">
-        <Rectangle id="addOuter" translation="[66, 0]" width="148" height="148" color="0x777E90FF" />
-        <Rectangle id="addInner" translation="[70, 4]" width="140" height="140" color="0x141416FF" />
-        <Group id="addBtn" translation="[66, 0]">
-          <Rectangle id="addHit" width="148" height="148" color="0x00000001" />
-          <Label id="addPlus" translation="[50, 26]" width="52" height="80" horizAlign="center" text="+" />
+        <!-- Right column 470px wide (x=810 → 1280). Circle/plus perfectly stacked at same origin. -->
+        <Group id="addPanel" translation="[810, 106]">
+          <Group id="addButton" translation="[161, 0]">
+            <Poster id="addFill" width="148" height="148" uri="pkg:/images/add-circle-fill.png" loadDisplayMode="scaleToFit" visible="false" />
+            <Poster id="addRing" width="148" height="148" uri="pkg:/images/add-circle-dashed.png" loadDisplayMode="scaleToFit" />
+            <Poster id="addPlus" width="148" height="148" uri="pkg:/images/add-plus.png" loadDisplayMode="scaleToFit" />
+          </Group>
+          <Label id="addTitle" translation="[0, 164]" width="470" height="36" horizAlign="center" text="Add" />
+          <Label id="addSub" translation="[0, 204]" width="470" height="32" horizAlign="center" text="Xtream Codes Playlist" />
         </Group>
-        <Label id="addTitle" translation="[0, 168]" width="280" height="36" horizAlign="center" text="Add" />
-        <Label id="addSub" translation="[0, 206]" width="280" height="32" horizAlign="center" text="Xtream Codes Playlist" />
       </Group>
     </Group>
   </children>

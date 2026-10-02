@@ -21,22 +21,24 @@
       height="72"
       loadDisplayMode="scaleToFit" />
 
-    <Group id="utilRow" translation="[1540, 38]">
+    <!-- Circular utils: Playlists / Parental / Settings (Web hub-util) -->
+    <Group id="utilRow" translation="[1584, 38]">
       <Group id="util0" translation="[0, 0]">
-        <Rectangle id="util0Bg" width="76" height="76" color="0x1A1B1FFF" />
-        <Label id="util0Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="PL" />
+        <Poster id="util0Bg" width="76" height="76" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
+        <Poster id="util0Icon" translation="[21, 21]" width="34" height="34" uri="pkg:/images/ui/hub-icon-layers.png" loadDisplayMode="scaleToFit" />
       </Group>
       <Group id="util1" translation="[94, 0]">
-        <Rectangle id="util1Bg" width="76" height="76" color="0x1A1B1FFF" />
-        <Label id="util1Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="PIN" />
+        <Poster id="util1Bg" width="76" height="76" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
+        <Poster id="util1Icon" translation="[21, 21]" width="34" height="34" uri="pkg:/images/ui/hub-icon-lock.png" loadDisplayMode="scaleToFit" />
       </Group>
       <Group id="util2" translation="[188, 0]">
-        <Rectangle id="util2Bg" width="76" height="76" color="0x1A1B1FFF" />
-        <Label id="util2Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="SET" />
+        <Poster id="util2Bg" width="76" height="76" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
+        <Poster id="util2Icon" translation="[21, 21]" width="34" height="34" uri="pkg:/images/ui/hub-icon-settings.png" loadDisplayMode="scaleToFit" />
       </Group>
     </Group>
 
-    <Group id="tilesRoot" translation="[260, 360]" />
+    <!-- Centered tile row: (1920 - 4*280 - 3*28) / 2 = 358 -->
+    <Group id="tilesRoot" translation="[358, 360]" />
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

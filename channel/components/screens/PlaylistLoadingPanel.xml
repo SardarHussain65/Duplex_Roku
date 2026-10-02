@@ -11,23 +11,25 @@
   <children>
     <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
 
-    <Group id="loadingRoot" translation="[500, 120]" visible="true">
+    <Group id="loadingRoot" translation="[500, 100]" visible="true">
       <Poster id="logo" translation="[416, 0]" uri="pkg:/images/logo.png" width="88" height="88" loadDisplayMode="scaleToFit" />
-      <Label id="title" translation="[0, 116]" width="920" height="48" horizAlign="center" text="Loading Playlist" />
-      <Label id="subtitle" translation="[60, 172]" width="800" height="36" horizAlign="center" text="Preparing your content..." />
-      <Rectangle id="cardBg" translation="[0, 240]" width="920" height="360" color="0x1C1E24FF" />
-      <Group id="stepsRoot" translation="[40, 272]" />
-      <Rectangle id="trackBg" translation="[0, 640]" width="920" height="6" color="0x23262FFF" />
-      <Rectangle id="trackFill" translation="[0, 640]" width="0" height="6" color="0x0451DFFF" />
+      <Label id="title" translation="[0, 116]" width="920" height="48" horizAlign="center" text="Preparing Your Playlist" />
+      <Label id="subtitle" translation="[40, 176]" width="840" height="40" horizAlign="center" text="Setting up your playlist — this will only take a moment." />
+
+      <Poster id="cardBg" translation="[0, 244]" width="920" height="360" uri="pkg:/images/ui/load-card.png" loadDisplayMode="scaleToFit" />
+      <Group id="stepsRoot" translation="[40, 276]" />
+
+      <Poster id="trackBg" translation="[0, 652]" width="920" height="8" uri="pkg:/images/ui/load-track.png" loadDisplayMode="scaleToFit" />
+      <Poster id="trackFill" translation="[0, 652]" width="0" height="8" uri="pkg:/images/ui/load-fill.png" loadDisplayMode="scaleToFill" />
     </Group>
 
-    <Group id="errorRoot" translation="[500, 220]" visible="false">
-      <Rectangle id="errorCard" width="920" height="420" color="0x1C1E24FF" />
+    <Group id="errorRoot" translation="[500, 200]" visible="false">
+      <Poster id="errorCard" width="920" height="420" uri="pkg:/images/ui/load-error-card.png" loadDisplayMode="scaleToFit" />
       <Label id="errorIcon" translation="[448, 62]" width="24" height="44" horizAlign="center" text="!" />
       <Label id="errorTitle" translation="[40, 152]" width="840" height="40" horizAlign="center" text="Unable to Load Playlist" />
       <Label id="errorCopy" translation="[80, 204]" width="760" height="80" horizAlign="center" wrap="true" maxLines="3" text="" />
       <Group id="errorBackBtn" translation="[200, 320]">
-        <Rectangle id="errorBackBg" width="520" height="64" color="0x0451DFFF" />
+        <Poster id="errorBackBg" width="520" height="64" uri="pkg:/images/ui/btn-white-960.png" loadDisplayMode="scaleToFit" />
         <Label id="errorBackText" translation="[0, 18]" width="520" height="32" horizAlign="center" text="Back to Playlists" />
       </Group>
     </Group>

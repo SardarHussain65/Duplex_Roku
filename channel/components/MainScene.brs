@@ -24,6 +24,7 @@ end sub
 sub wireObservers()
   m.top.findNode("activation").observeField("continueSelected", "onContinue")
   m.top.findNode("activation").observeField("quickSetupSelected", "onQuickSetup")
+  m.top.findNode("activation").observeField("exitSelected", "onActivationExit")
   m.top.findNode("playlistSource").observeField("backSelected", "onPlaylistSourceBack")
   m.top.findNode("playlistSource").observeField("playlistSelected", "onPlaylistPicked")
   m.top.findNode("playlistSource").observeField("addXtreamSelected", "onAddXtream")
@@ -142,6 +143,16 @@ sub onQuickSetup()
   if m.suppressNav then return
   if m.top.findNode("activation").quickSetupSelected <> true then return
   showScreen(DuplexScreenPlaylistSource(), { focusAdd: true })
+end sub
+
+sub onActivationExit()
+  if m.suppressNav then return
+  if m.top.findNode("activation").exitSelected <> true then return
+  DuplexLog("Exit App")
+  appMgr = CreateObject("roAppManager")
+  if appMgr <> invalid
+    appMgr.Exit()
+  end if
 end sub
 
 sub onPlaylistSourceBack()

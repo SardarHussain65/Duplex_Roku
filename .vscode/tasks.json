@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build shared library",
+      "type": "shell",
+      "command": "npm run build:lib",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Open BrightScript Simulator",
+      "type": "shell",
+      "command": "open",
+      "args": ["${workspaceFolder}/tools/BrightScript Simulator.app"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Package Duplex (zip)",
+      "type": "shell",
+      "command": "npm run package",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Deploy to Simulator (zip + curl)",
+      "type": "shell",
+      "command": "npm run sim:deploy",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Telnet Debug Console",
+      "type": "shell",
+      "command": "nc 127.0.0.1 8085",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      }
+    }
+  ]
+}

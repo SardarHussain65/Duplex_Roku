@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="HomePanel" extends="Group">
+  <interface>
+    <field id="initialTab" type="string" value="liveTv" />
+    <field id="channelSelected" type="assocarray" alwaysNotify="true" />
+    <field id="categorySelected" type="string" alwaysNotify="true" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
+    <Poster
+      id="hero"
+      translation="[0, 0]"
+      uri="pkg:/images/heroImageLiveTV.jpg"
+      width="1920"
+      height="420"
+      loadDisplayMode="scaleToFill"
+      visible="false" />
+    <Rectangle id="heroFade" translation="[0, 280]" width="1920" height="140" color="0x0F1012FF" visible="false" />
+    <Label id="title" translation="[80, 40]" width="800" height="48" text="Live TV" />
+    <Label id="heroTag" translation="[80, 300]" width="800" height="40" text="What's Live Now!" visible="false" />
+    <Label id="statusLabel" translation="[80, 100]" width="1600" height="32" text="Loading channels..." />
+    <Group id="catsRoot" translation="[80, 150]" />
+    <Group id="gridRoot" translation="[80, 240]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/HomePanel.brs" />
+</component>

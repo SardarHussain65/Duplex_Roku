@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlaylistCard" extends="Group">
+  <interface>
+    <field id="cardName" type="string" alias="nameLabel.text" />
+    <field id="cardUrl" type="string" alias="urlLabel.text" />
+    <field id="cardTag" type="string" alias="tagLabel.text" />
+    <field id="cardFocused" type="boolean" onChange="onFocusChanged" />
+  </interface>
+
+  <children>
+    <Rectangle id="border" width="704" height="100" color="0x353945FF" />
+    <Rectangle id="cardBg" translation="[2,2]" width="700" height="96" color="0x1C1E24FF" />
+    <Rectangle id="iconBg" translation="[22,26]" width="48" height="48" color="0xFFFFFF14" />
+    <Label id="iconGlyph" translation="[36,34]" width="24" height="24" text="≡" />
+    <Label id="nameLabel" translation="[86,24]" width="420" height="32" text="" />
+    <Label id="urlLabel" translation="[86,56]" width="420" height="28" text="" />
+    <Rectangle id="tagBg" translation="[560,14]" width="130" height="30" color="0x3F4352FF" />
+    <Label id="tagLabel" translation="[566,20]" width="118" height="22" horizAlign="center" text="" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/widgets/PlaylistCard.brs" />
+</component>

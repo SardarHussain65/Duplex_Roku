@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="SettingsPanel" extends="Group">
+  <interface>
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <field id="logoutSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
+    <Label id="title" translation="[80, 48]" width="800" height="48" text="Settings" />
+
+    <Group id="navRoot" translation="[80, 140]" />
+    <Rectangle id="divider" translation="[520, 140]" width="2" height="800" color="0x2A2D36FF" />
+    <Label id="detailTitle" translation="[580, 140]" width="1200" height="40" text="" />
+    <Label id="detailBody" translation="[580, 200]" width="1200" height="600" wrap="true" maxLines="18" text="" />
+    <Group id="actionBtn" translation="[580, 820]">
+      <Rectangle id="actionBg" width="420" height="64" color="0x0451DFFF" />
+      <Label id="actionText" translation="[0, 18]" width="420" height="32" horizAlign="center" text="" />
+    </Group>
+    <Label id="hint" translation="[80, 1000]" width="1600" height="32" text="Up/Down sections · Left/Right options · OK select · Back return" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/SettingsPanel.brs" />
+</component>

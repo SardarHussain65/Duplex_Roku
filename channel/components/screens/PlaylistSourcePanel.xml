@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlaylistSourcePanel" extends="Group">
+  <interface>
+    <field id="focusAddButton" type="boolean" value="false" />
+    <field id="playlistSelected" type="assocarray" alwaysNotify="true" />
+    <field id="addXtreamSelected" type="boolean" alwaysNotify="true" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
+
+    <Group id="contentRoot" translation="[320, 40]">
+      <Poster id="logo" translation="[592, 0]" uri="pkg:/images/logo.png" width="96" height="96" loadDisplayMode="scaleToFit" />
+
+      <Label id="title" translation="[0, 108]" width="1280" height="52" horizAlign="center" text="Select Playlist Source" />
+      <Label
+        id="subtitle"
+        translation="[230, 168]"
+        width="820"
+        height="70"
+        horizAlign="center"
+        vertAlign="top"
+        wrap="true"
+        maxLines="2"
+        text="Select an existing playlist or add a new Xtream Codes playlist to configure your device." />
+
+      <!-- Left: playlist list -->
+      <Group id="listRoot" translation="[40, 268]" />
+
+      <Label id="statusLabel" translation="[40, 268]" width="720" height="40" visible="false" text="Loading playlists..." />
+
+      <Rectangle id="divider" translation="[780, 300]" width="1" height="300" color="0x353945FF" />
+
+      <!-- Right: add Xtream -->
+      <Group id="addPanel" translation="[870, 320]">
+        <Rectangle id="addOuter" translation="[66, 0]" width="148" height="148" color="0x777E90FF" />
+        <Rectangle id="addInner" translation="[70, 4]" width="140" height="140" color="0x141416FF" />
+        <Group id="addBtn" translation="[66, 0]">
+          <Rectangle id="addHit" width="148" height="148" color="0x00000001" />
+          <Label id="addPlus" translation="[50, 26]" width="52" height="80" horizAlign="center" text="+" />
+        </Group>
+        <Label id="addTitle" translation="[0, 168]" width="280" height="36" horizAlign="center" text="Add" />
+        <Label id="addSub" translation="[0, 206]" width="280" height="32" horizAlign="center" text="Xtream Codes Playlist" />
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/PlaylistSourcePanel.brs" />
+</component>

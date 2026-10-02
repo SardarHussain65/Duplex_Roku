@@ -1,0 +1,17 @@
+{
+  "rootDir": "./channel",
+  "files": [
+    "manifest",
+    "source/Main.brs",
+    "source/DuplexShared.brs",
+    "source/widgets/**/*.*",
+    "components/**/*.*",
+    "images/**/*.*",
+    "locale/**/*.*"
+  ],
+  "stagingDir": "./dist/bs-staging",
+  "retainStagingFolder": false,
+  "createPackage": true,
+  "host": "127.0.0.1",
+  "password": "rokudev"
+}

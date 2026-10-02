@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ActivationPanel" extends="Group">
+  <interface>
+    <field id="continueSelected" type="boolean" alwaysNotify="true" />
+    <field id="quickSetupSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x121212FF" />
+
+    <!-- 960px column centered on 1920 canvas: left edge x = 480 -->
+    <Group id="contentRoot" translation="[480, 56]">
+
+      <Poster id="logo" translation="[436, 0]" uri="pkg:/images/logo.png" width="88" height="88" loadDisplayMode="scaleToFit" />
+
+      <Label id="heading" translation="[0, 108]" width="960" height="80" horizAlign="center" vertAlign="center" wrap="true" maxLines="2" text="Your MAC address is activated" />
+
+      <Label
+        id="copy"
+        translation="[50, 196]"
+        width="860"
+        height="90"
+        horizAlign="center"
+        vertAlign="top"
+        wrap="true"
+        maxLines="3"
+        text="Visit www.duplexnew.tv/manageplaylists to manage your playlists and account." />
+
+      <!-- Trial banner -->
+      <Rectangle id="bannerBg" translation="[0, 300]" width="960" height="88" color="0x1F7A28FF" />
+      <Label id="bannerTitle" translation="[24, 314]" width="820" height="32" text="Trial Available" />
+      <Label id="bannerSub" translation="[24, 348]" width="820" height="28" text="Start your free trial to explore Duplex." />
+      <Poster id="bannerIcon" translation="[888, 320]" uri="pkg:/images/trial-badge.png" width="48" height="48" loadDisplayMode="scaleToFit" />
+
+      <!-- ID boxes (left) -->
+      <Rectangle translation="[0, 424]" width="460" height="100" color="0x1C1C1EFF" />
+      <Label id="macLabel" translation="[24, 438]" width="412" height="24" text="MAC Address" />
+      <Label id="macValue" translation="[24, 468]" width="412" height="40" text="LOADING..." />
+
+      <Rectangle translation="[0, 540]" width="460" height="100" color="0x1C1C1EFF" />
+      <Label id="deviceLabel" translation="[24, 554]" width="412" height="24" text="Device ID" />
+      <Label id="deviceValue" translation="[24, 584]" width="412" height="40" text="Loading..." />
+
+      <!-- QR (right) -->
+      <Rectangle translation="[560, 424]" width="220" height="220" color="0xFFFFFFFF" />
+      <Poster id="qrCode" translation="[570, 434]" width="200" height="200" loadDisplayMode="scaleToFit" />
+      <Label id="qrHint" translation="[560, 656]" width="220" height="24" horizAlign="center" text="Scan to activate" />
+
+      <Label
+        id="warning"
+        translation="[0, 696]"
+        width="960"
+        height="56"
+        horizAlign="center"
+        vertAlign="top"
+        wrap="true"
+        maxLines="2"
+        visible="false"
+        text="This app does not provide any content. You must enter your own content to proceed." />
+
+      <!-- Buttons centered -->
+      <Group id="continueBtn" translation="[230, 772]">
+        <Rectangle id="continueBg" width="240" height="64" color="0x0451DFFF" />
+        <Label id="continueText" translation="[0, 18]" width="240" height="32" horizAlign="center" text="Continue" />
+      </Group>
+      <Group id="quickSetupBtn" translation="[490, 772]">
+        <Rectangle id="quickSetupBg" width="240" height="64" color="0x2C2C2EFF" />
+        <Label id="quickSetupText" translation="[0, 18]" width="240" height="32" horizAlign="center" text="Quick Setup" />
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/ActivationPanel.brs" />
+</component>

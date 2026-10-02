@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlayerPanel" extends="Group">
+  <interface>
+    <field id="channel" type="assocarray" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x000000FF" />
+    <Video id="video" width="1920" height="1080" />
+    <Group id="overlay" translation="[0, 900]">
+      <Rectangle id="overlayBg" width="1920" height="180" color="0x000000CC" />
+      <Label id="title" translation="[60, 30]" width="1400" height="40" text="" />
+      <Label id="liveBadge" translation="[1600, 30]" width="240" height="40" horizAlign="right" text="LIVE" />
+      <Label id="hint" translation="[60, 80]" width="1600" height="32" text="OK play/pause · Left/Right seek ±10s (VOD) · Back to exit" />
+      <Label id="status" translation="[60, 120]" width="1600" height="32" text="" />
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/PlayerPanel.brs" />
+</component>

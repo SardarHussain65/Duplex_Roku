@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="LiveChannelPanel" extends="Group">
+  <interface>
+    <field id="browse" type="assocarray" />
+    <field id="channelSelected" type="assocarray" alwaysNotify="true" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
+    <Poster id="logo" translation="[72, 36]" uri="pkg:/images/ActivationImage.png" width="64" height="64" loadDisplayMode="scaleToFit" />
+    <Label id="header" translation="[152, 48]" width="1400" height="40" text="Live TV" />
+
+    <Label id="listTitle" translation="[72, 120]" width="520" height="32" text="Channels" />
+    <Group id="listRoot" translation="[72, 160]" />
+
+    <Rectangle id="previewFrame" translation="[640, 120]" width="1180" height="620" color="0x000000FF" />
+    <Video id="previewVideo" translation="[640, 120]" width="1180" height="620" />
+    <Label id="previewHint" translation="[640, 760]" width="1180" height="32" horizAlign="center" text="OK on preview to watch fullscreen · Back to browse" />
+
+    <Label id="metaTitle" translation="[640, 820]" width="1180" height="40" text="" />
+    <Label id="metaSub" translation="[640, 870]" width="1180" height="80" wrap="true" maxLines="2" text="" />
+    <Label id="statusLabel" translation="[72, 980]" width="1600" height="32" text="Loading..." />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/LiveChannelPanel.brs" />
+</component>

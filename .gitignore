@@ -1,0 +1,9 @@
+dist/
+channel/source/DuplexShared.brs
+channel/source/widgets/DuplexKeyboard.brs
+tools/BrightScript Simulator.app/
+tools/*.zip
+*.zip
+node_modules/
+.DS_Store
+

@@ -1,0 +1,14 @@
+{
+  "app.name": "Duplex",
+  "splash.title": "Duplex New Player",
+  "activation.heading": "Your MAC address is activated",
+  "playlistSource.title": "Select Playlist Source",
+  "xtream.addXc": "Add Xtream Codes Playlist",
+  "loading.title": "Loading Playlist",
+  "hub.subtitle": "Choose a section to start watching",
+  "home.liveTv": "Live TV",
+  "settings.title": "Settings",
+  "common.cancel": "Cancel",
+  "common.confirm": "Confirm",
+  "common.back": "Back"
+}

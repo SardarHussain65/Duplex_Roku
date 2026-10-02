@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+  <children>
+    <SplashPanel id="splash" visible="true" />
+    <ActivationPanel id="activation" visible="false" />
+    <PlaylistSourcePanel id="playlistSource" visible="false" />
+    <XtreamSetupPanel id="xtreamSetup" visible="false" />
+    <PlaylistLoadingPanel id="playlistLoading" visible="false" />
+    <HubPanel id="hub" visible="false" />
+    <HomePanel id="home" visible="false" />
+    <LiveChannelPanel id="liveChannel" visible="false" />
+    <VodDetailPanel id="vodDetail" visible="false" />
+    <PlayerPanel id="player" visible="false" />
+    <SettingsPanel id="settings" visible="false" />
+    <ParentalPinPanel id="parentalPin" visible="false" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+</component>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="HubPanel" extends="Group">
+  <interface>
+    <field id="sectionSelected" type="string" alwaysNotify="true" />
+    <field id="switchPlaylistSelected" type="boolean" alwaysNotify="true" />
+    <field id="parentalSelected" type="boolean" alwaysNotify="true" />
+    <field id="settingsSelected" type="boolean" alwaysNotify="true" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x0B0B0CFF" />
+
+    <Poster
+      id="logo"
+      translation="[72, 40]"
+      uri="pkg:/images/ActivationImage.png"
+      width="72"
+      height="72"
+      loadDisplayMode="scaleToFit" />
+
+    <Group id="utilRow" translation="[1540, 38]">
+      <Group id="util0" translation="[0, 0]">
+        <Rectangle id="util0Bg" width="76" height="76" color="0x1A1B1FFF" />
+        <Label id="util0Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="PL" />
+      </Group>
+      <Group id="util1" translation="[94, 0]">
+        <Rectangle id="util1Bg" width="76" height="76" color="0x1A1B1FFF" />
+        <Label id="util1Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="PIN" />
+      </Group>
+      <Group id="util2" translation="[188, 0]">
+        <Rectangle id="util2Bg" width="76" height="76" color="0x1A1B1FFF" />
+        <Label id="util2Text" translation="[0, 26]" width="76" height="24" horizAlign="center" text="SET" />
+      </Group>
+    </Group>
+
+    <Group id="tilesRoot" translation="[260, 360]" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/HubPanel.brs" />
+</component>

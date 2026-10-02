@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ContentCard" extends="Group">
+  <interface>
+    <field id="cardTitle" type="string" alias="titleLabel.text" />
+    <field id="cardSubtitle" type="string" alias="subLabel.text" />
+    <field id="cardPoster" type="string" onChange="onPosterChanged" />
+    <field id="cardFocused" type="boolean" onChange="onFocusChanged" />
+  </interface>
+
+  <children>
+    <Rectangle id="border" width="280" height="180" color="0x353945FF" />
+    <Rectangle id="cardBg" translation="[2,2]" width="276" height="176" color="0x1C1E24FF" />
+    <Poster id="poster" translation="[2,2]" width="276" height="120" loadDisplayMode="scaleToZoom" />
+    <Label id="titleLabel" translation="[12, 128]" width="252" height="28" text="" />
+    <Label id="subLabel" translation="[12, 152]" width="252" height="22" text="" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/widgets/ContentCard.brs" />
+</component>

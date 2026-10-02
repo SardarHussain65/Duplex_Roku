@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="ContentLoadTask" extends="Task">
+  <interface>
+    <field id="playlistId" type="string" />
+    <field id="contentType" type="string" value="LIVE" />
+    <field id="page" type="integer" value="1" />
+    <field id="limit" type="integer" value="50" />
+    <field id="category" type="string" value="" />
+    <field id="categories" type="array" alwaysNotify="true" />
+    <field id="channels" type="array" alwaysNotify="true" />
+    <field id="error" type="string" alwaysNotify="true" />
+  </interface>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/tasks/ContentLoadTask.brs" />
+</component>

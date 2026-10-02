@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="SplashPanel" extends="Group">
+  <children>
+    <Rectangle
+      id="background"
+      width="1920"
+      height="1080"
+      color="0x000000FF" />
+
+    <LayoutGroup
+      id="brandGroup"
+      layoutDirection="vert"
+      horizAlignment="center"
+      vertAlignment="center"
+      translation="[960,540]">
+      <Poster
+        id="logo"
+        uri="pkg:/images/logo.png"
+        width="200"
+        height="200"
+        loadDisplayMode="scaleToFit" />
+      <Label
+        id="title"
+        text="Duplex New Player"
+        width="900"
+        horizAlign="center"
+        translation="[0,24]" />
+    </LayoutGroup>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/components/screens/SplashPanel.brs" />
+</component>

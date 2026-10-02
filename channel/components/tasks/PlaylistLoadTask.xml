@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlaylistLoadTask" extends="Task">
+  <interface>
+    <field id="deviceId" type="string" />
+    <field id="playlists" type="assocarray" alwaysNotify="true" />
+    <field id="error" type="string" alwaysNotify="true" />
+  </interface>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/tasks/PlaylistLoadTask.brs" />
+</component>

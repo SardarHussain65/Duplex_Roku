@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="VodDetailPanel" extends="Group">
+  <interface>
+    <field id="item" type="assocarray" />
+    <field id="watchSelected" type="assocarray" alwaysNotify="true" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
+    <Poster id="backdrop" translation="[0, 0]" width="1920" height="700" loadDisplayMode="scaleToFill" />
+    <Rectangle id="fade" translation="[0, 480]" width="1920" height="220" color="0x0F1012FF" />
+
+    <Label id="title" translation="[80, 520]" width="1400" height="56" text="" />
+    <Label id="meta" translation="[80, 590]" width="1400" height="36" text="" />
+    <Label id="plot" translation="[80, 650]" width="1400" height="120" wrap="true" maxLines="3" text="" />
+
+    <Group id="watchBtn" translation="[80, 820]">
+      <Rectangle id="watchBg" width="320" height="64" color="0x0451DFFF" />
+      <Label id="watchText" translation="[0, 18]" width="320" height="32" horizAlign="center" text="Watch Now" />
+    </Group>
+    <Label id="hint" translation="[80, 920]" width="1200" height="32" text="OK Watch Now · Back to browse" />
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/VodDetailPanel.brs" />
+</component>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="PlaylistLoadingPanel" extends="Group">
+  <interface>
+    <field id="playlist" type="assocarray" />
+    <field id="backSelected" type="boolean" alwaysNotify="true" />
+    <field id="readySelected" type="boolean" alwaysNotify="true" />
+    <function name="onPanelShown" />
+    <function name="handleKeyEvent" />
+  </interface>
+
+  <children>
+    <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
+
+    <Group id="loadingRoot" translation="[500, 120]" visible="true">
+      <Poster id="logo" translation="[416, 0]" uri="pkg:/images/logo.png" width="88" height="88" loadDisplayMode="scaleToFit" />
+      <Label id="title" translation="[0, 116]" width="920" height="48" horizAlign="center" text="Loading Playlist" />
+      <Label id="subtitle" translation="[60, 172]" width="800" height="36" horizAlign="center" text="Preparing your content..." />
+      <Rectangle id="cardBg" translation="[0, 240]" width="920" height="360" color="0x1C1E24FF" />
+      <Group id="stepsRoot" translation="[40, 272]" />
+      <Rectangle id="trackBg" translation="[0, 640]" width="920" height="6" color="0x23262FFF" />
+      <Rectangle id="trackFill" translation="[0, 640]" width="0" height="6" color="0x0451DFFF" />
+    </Group>
+
+    <Group id="errorRoot" translation="[500, 220]" visible="false">
+      <Rectangle id="errorCard" width="920" height="420" color="0x1C1E24FF" />
+      <Label id="errorIcon" translation="[448, 62]" width="24" height="44" horizAlign="center" text="!" />
+      <Label id="errorTitle" translation="[40, 152]" width="840" height="40" horizAlign="center" text="Unable to Load Playlist" />
+      <Label id="errorCopy" translation="[80, 204]" width="760" height="80" horizAlign="center" wrap="true" maxLines="3" text="" />
+      <Group id="errorBackBtn" translation="[200, 320]">
+        <Rectangle id="errorBackBg" width="520" height="64" color="0x0451DFFF" />
+        <Label id="errorBackText" translation="[0, 18]" width="520" height="32" horizAlign="center" text="Back to Playlists" />
+      </Group>
+    </Group>
+  </children>
+
+  <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />
+  <script type="text/brightscript" uri="pkg:/components/screens/PlaylistLoadingPanel.brs" />
+</component>

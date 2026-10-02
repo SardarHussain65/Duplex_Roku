@@ -1,0 +1,14 @@
+{
+  "name": "duplex-roku",
+  "private": true,
+  "version": "0.2.0",
+  "description": "Duplex IPTV Roku channel",
+  "scripts": {
+    "build:lib": "node tools/build-lib.mjs",
+    "package": "node tools/package.mjs",
+    "package:release": "node tools/package-release.mjs",
+    "sim:open": "open \"tools/BrightScript Simulator.app\"",
+    "sim:deploy": "npm run package && node tools/deploy-simulator.mjs",
+    "sim:run": "npm run sim:open && sleep 2 && npm run sim:deploy"
+  }
+}

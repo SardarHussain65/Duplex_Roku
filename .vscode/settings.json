@@ -1,0 +1,10 @@
+{
+  "brightscript.deploy.host": "127.0.0.1",
+  "brightscript.deploy.password": "rokudev",
+  "brightscript.debug.enableDebugProtocol": false,
+  "brightscript.debug.rendezvousTracking": false,
+  "files.associations": {
+    "*.brs": "brightscript",
+    "*.bs": "brighterscript"
+  }
+}

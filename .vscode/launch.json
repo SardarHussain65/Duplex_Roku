@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Duplex → BrightScript Simulator",
+      "type": "brightscript",
+      "request": "launch",
+      "host": "127.0.0.1",
+      "packagePort": 80,
+      "password": "rokudev",
+      "preLaunchTask": "Build shared library",
+      "rootDir": "${workspaceFolder}/channel",
+      "files": [
+        "manifest",
+        "source/Main.brs",
+        "source/DuplexShared.brs",
+        "source/widgets/**/*.*",
+        "components/**/*.*",
+        "images/**/*.*",
+        "locale/**/*.*"
+      ],
+      "enableDebugProtocol": false,
+      "rendezvousTracking": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Duplex → Attach (simulator already running)",
+      "type": "brightscript",
+      "request": "attach",
+      "host": "127.0.0.1",
+      "password": "rokudev",
+      "enableDebugProtocol": false,
+      "rendezvousTracking": false
+    }
+  ]
+}

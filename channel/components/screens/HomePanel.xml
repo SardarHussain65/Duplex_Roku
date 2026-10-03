@@ -40,22 +40,27 @@
           text="Jump into live channels and see what's happening right now across news, sports, and entertainment." />
       </Group>
 
-      <!-- Movies / Series hero -->
+      <!-- Movies / Series hero — Web parity (~810px) -->
       <Group id="vodHero" visible="false">
         <Poster
           id="vodBackdrop"
           translation="[0, 0]"
           width="1920"
-          height="620"
+          height="810"
           uri=""
           loadDisplayMode="scaleToFill" />
-        <Rectangle id="vodFadeL" translation="[0, 0]" width="980" height="620" color="0x0F1012EE" />
-        <Rectangle id="vodFadeB" translation="[0, 420]" width="1920" height="200" color="0x0F1012FF" />
-        <Label id="vodMeta" translation="[72, 160]" width="900" height="32" text="" />
-        <Label id="vodTitle" translation="[72, 200]" width="900" height="90" text="" />
-        <Label id="vodDesc" translation="[72, 300]" width="760" height="90" wrap="true" text="" />
+        <Poster
+          id="vodFade"
+          translation="[0, 0]"
+          width="1920"
+          height="810"
+          uri="pkg:/images/ui/home-vod-hero-fade.png"
+          loadDisplayMode="scaleToFill" />
+        <Label id="vodMeta" translation="[72, 420]" width="900" height="32" text="" />
+        <Label id="vodTitle" translation="[72, 460]" width="1000" height="90" text="" />
+        <Label id="vodDesc" translation="[72, 560]" width="760" height="90" wrap="true" text="" />
 
-        <Group id="vodActions" translation="[72, 420]">
+        <Group id="vodActions" translation="[72, 670]">
           <Group id="btnWatch" translation="[0, 0]">
             <Poster id="btnWatchRing" translation="[-14, -14]" width="308" height="92" uri="pkg:/images/ui/home-hero-btn-ring.png" loadDisplayMode="scaleToFit" visible="false" />
             <Poster id="btnWatchBg" width="280" height="64" uri="pkg:/images/ui/home-hero-btn.png" loadDisplayMode="scaleToFit" />
@@ -68,7 +73,7 @@
           </Group>
         </Group>
 
-        <Group id="vodDots" translation="[880, 560]">
+        <Group id="vodDots" translation="[900, 760]">
           <Poster id="dot0" width="16" height="16" uri="pkg:/images/ui/home-dot-on.png" />
           <Poster id="dot1" translation="[24, 0]" width="16" height="16" uri="pkg:/images/ui/home-dot-off.png" />
           <Poster id="dot2" translation="[48, 0]" width="16" height="16" uri="pkg:/images/ui/home-dot-off.png" />

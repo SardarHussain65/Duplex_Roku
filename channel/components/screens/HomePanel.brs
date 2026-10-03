@@ -30,7 +30,7 @@ sub init()
   styleLabel(m.top.findNode("heroTitleB"), 72, "0xC60057FF")
   styleLabel(m.top.findNode("heroDesc"), 24, "0xD6D8E0FF")
   styleLabel(m.top.findNode("vodMeta"), 22, "0xD1D5DBFF")
-  styleLabel(m.top.findNode("vodTitle"), 56, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("vodTitle"), 72, "0xFFFFFFFF")
   styleLabel(m.top.findNode("vodDesc"), 24, "0xD6D8E0FF")
   styleLabel(m.top.findNode("btnWatchLbl"), 24, "0xFFFFFFFF")
   styleLabel(m.top.findNode("btnLearnLbl"), 24, "0xFFFFFFFF")
@@ -234,20 +234,12 @@ sub onChannels()
 end sub
 
 sub layoutBrowseY()
-  ' Live hero ~810 (Web); VOD hero ~620 — keep recent below hero
-  if m.isVod
-    m.top.findNode("recentTitle").translation = [72, 640]
-    m.top.findNode("recentRoot").translation = [72, 696]
-    m.top.findNode("catsTitle").translation = [72, 960]
-    m.top.findNode("catsRoot").translation = [72, 1016]
-    m.top.findNode("statusLabel").translation = [72, 640]
-  else
-    m.top.findNode("recentTitle").translation = [72, 822]
-    m.top.findNode("recentRoot").translation = [72, 878]
-    m.top.findNode("catsTitle").translation = [72, 1120]
-    m.top.findNode("catsRoot").translation = [72, 1176]
-    m.top.findNode("statusLabel").translation = [72, 822]
-  end if
+  ' Live + VOD heroes ~810 (Web) — keep recent below hero
+  m.top.findNode("recentTitle").translation = [72, 822]
+  m.top.findNode("recentRoot").translation = [72, 878]
+  m.top.findNode("catsTitle").translation = [72, 1120]
+  m.top.findNode("catsRoot").translation = [72, 1176]
+  m.top.findNode("statusLabel").translation = [72, 822]
 end sub
 
 sub onError()
@@ -953,16 +945,10 @@ sub updateScroll()
     return
   end if
   if m.focusZone = "cats"
-    if m.isVod
-      m.top.findNode("contentRoot").translation = [0, -520]
-    else
-      ' Tall live hero — scroll so Browse Categories sits near top
-      m.top.findNode("contentRoot").translation = [0, -1040]
-    end if
-  else if m.focusZone = "recent" and m.isVod
-    m.top.findNode("contentRoot").translation = [0, -200]
-  else if m.focusZone = "recent" and m.isLive
-    ' Keep hero dominant; nudge slightly so recent row is fully on-screen
+    ' Tall hero — scroll so Browse Categories sits near top
+    m.top.findNode("contentRoot").translation = [0, -1040]
+  else if m.focusZone = "recent"
+    ' Keep hero dominant; nudge so recent row is fully on-screen
     m.top.findNode("contentRoot").translation = [0, -40]
   else
     m.top.findNode("contentRoot").translation = [0, 0]

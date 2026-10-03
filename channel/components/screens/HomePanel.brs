@@ -5,6 +5,7 @@ sub init()
   m.heroBtn = 0
   m.heroSlide = 0
   m.recentIndex = 0
+  m.recentScrollX = 0
   m.catIndex = 0
   m.gridIndex = 0
   m.cols = 5
@@ -62,6 +63,7 @@ sub onPanelShown()
   m.top.channelSelected = invalid
   m.top.categorySelected = ""
   m.recentIndex = 0
+  m.recentScrollX = 0
   m.catIndex = 0
   m.gridIndex = 0
   m.heroBtn = 0
@@ -892,18 +894,51 @@ sub updateVodHero()
   end for
 end sub
 
+function recentCardPitch() as Integer
+  return 362 ' cardW 327 + gap 35
+end function
+
+sub updateRecentScrollOffset()
+  if m.recentScrollX = invalid then m.recentScrollX = 0
+  if m.recent.Count() = 0
+    m.recentScrollX = 0
+    return
+  end if
+  pitch = recentCardPitch()
+  cardW = 327
+  viewW = 1776
+  pad = 28
+  if m.recentIndex < 0 then m.recentIndex = 0
+  if m.recentIndex >= m.recent.Count() then m.recentIndex = m.recent.Count() - 1
+  focusLeft = m.recentIndex * pitch
+  focusRight = focusLeft + cardW
+  if focusRight - m.recentScrollX > viewW - pad
+    m.recentScrollX = focusRight - (viewW - pad)
+  end if
+  if focusLeft - m.recentScrollX < pad
+    m.recentScrollX = focusLeft - pad
+  end if
+  if m.recentScrollX < 0 then m.recentScrollX = 0
+  maxScroll = m.recent.Count() * pitch - 35 - viewW
+  if maxScroll < 0 then maxScroll = 0
+  if m.recentScrollX > maxScroll then m.recentScrollX = maxScroll
+end sub
+
 sub renderRecent()
   root = m.top.findNode("recentRoot")
   clearChildren(root)
+  ' Clip so scrolled cards do not draw over the left gutter
+  root.clippingRect = [-16, -20, 1808, 250]
   cardW = 327
   cardH = 184
   gap = 35
+  pitch = cardW + gap
+  updateRecentScrollOffset()
   for i = 0 to m.recent.Count() - 1
-    if i >= 5 then exit for
     item = m.recent[i]
     focused = (m.focusZone = "recent" and i = m.recentIndex)
     grp = root.createChild("Group")
-    grp.translation = [i * (cardW + gap), 0]
+    grp.translation = [i * pitch - m.recentScrollX, 0]
 
     ring = grp.createChild("Poster")
     ring.id = "ring"
@@ -1208,7 +1243,7 @@ function handleBrowseKeys(key as String) as Boolean
       if m.catIndex < m.cols
         if m.recent.Count() > 0
           m.focusZone = "recent"
-          if m.recentIndex > 4 then m.recentIndex = 4
+          if m.recentIndex >= m.recent.Count() then m.recentIndex = m.recent.Count() - 1
         else if m.isVod
           m.focusZone = "hero"
         end if
@@ -1274,7 +1309,6 @@ function handleBrowseKeys(key as String) as Boolean
       end if
     else if m.focusZone = "recent"
       maxR = m.recent.Count() - 1
-      if maxR > 4 then maxR = 4
       m.recentIndex = m.recentIndex + 1
       if m.recentIndex > maxR then m.recentIndex = maxR
     else

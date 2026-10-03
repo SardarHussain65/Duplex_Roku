@@ -30,3 +30,9 @@ sub DuplexSetLanguage(lang as String)
     g.duplexLocale = DuplexLoadLocale(lang)
     DuplexRegistryWrite("language", lang)
 end sub
+
+function DuplexGetLanguage() as String
+    lang = DuplexRegistryRead("language")
+    if lang = invalid or lang = "" then return "en"
+    return lang
+end function

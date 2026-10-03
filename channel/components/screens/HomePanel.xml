@@ -13,31 +13,29 @@
     <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
 
     <Group id="contentRoot" translation="[0, 0]">
-      <!-- Live hero -->
+      <!-- Live hero — Web parity (~810px) -->
       <Group id="liveHero" visible="false">
         <Poster
           id="heroArt"
-          translation="[720, 0]"
-          width="1200"
-          height="420"
+          translation="[730, 0]"
+          width="1190"
+          height="810"
           uri="pkg:/images/heroImageLiveTV.jpg"
           loadDisplayMode="scaleToFill" />
-        <Rectangle id="heroFadeL" translation="[0, 0]" width="900" height="420" color="0x0F1012FF" />
-        <Rectangle id="heroFadeB" translation="[0, 300]" width="1920" height="120" color="0x0F1012FF" />
         <Poster
-          id="logo"
-          translation="[72, 36]"
-          width="56"
-          height="56"
-          uri="pkg:/images/ActivationImage.png"
-          loadDisplayMode="scaleToFit" />
-        <Label id="heroTitleA" translation="[72, 140]" width="480" height="80" text="What's Live" />
-        <Label id="heroTitleB" translation="[470, 140]" width="220" height="80" text="Now!" />
+          id="heroFade"
+          translation="[0, 0]"
+          width="1920"
+          height="810"
+          uri="pkg:/images/ui/home-live-hero-fade.png"
+          loadDisplayMode="scaleToFill" />
+        <Label id="heroTitleA" translation="[72, 300]" width="520" height="90" text="What's Live" />
+        <Label id="heroTitleB" translation="[520, 300]" width="240" height="90" text="Now!" />
         <Label
           id="heroDesc"
-          translation="[72, 230]"
+          translation="[72, 410]"
           width="720"
-          height="100"
+          height="110"
           wrap="true"
           text="Jump into live channels and see what's happening right now across news, sports, and entertainment." />
       </Group>
@@ -85,6 +83,15 @@
 
       <Label id="catsTitle" translation="[72, 960]" width="600" height="40" text="Browse Categories" visible="false" />
       <Group id="catsRoot" translation="[72, 1016]" />
+
+      <!-- Favorites / Parental library -->
+      <Group id="libraryView" visible="false">
+        <Label id="libraryTitle" translation="[72, 48]" width="900" height="48" text="Favorites" />
+        <Group id="libraryFilters" translation="[72, 120]" />
+        <Label id="librarySectionTitle" translation="[72, 214]" width="900" height="40" text="Browse Categories" visible="false" />
+        <Group id="libraryGrid" translation="[72, 270]" />
+        <Label id="libraryEmpty" translation="[72, 420]" width="1776" height="80" text="" horizAlign="center" visible="false" />
+      </Group>
 
       <!-- Category titles grid (movies/series after picking a category) -->
       <Group id="titlesView" visible="false">

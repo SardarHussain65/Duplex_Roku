@@ -3,11 +3,15 @@
   <interface>
     <field id="playlistId" type="string" />
     <field id="contentType" type="string" value="LIVE" />
+    <field id="favoriteType" type="string" value="LIVE" />
     <field id="page" type="integer" value="1" />
     <field id="limit" type="integer" value="50" />
     <field id="category" type="string" value="" />
     <field id="categories" type="array" alwaysNotify="true" />
     <field id="channels" type="array" alwaysNotify="true" />
+    <field id="totalLive" type="integer" alwaysNotify="true" />
+    <field id="totalMovies" type="integer" alwaysNotify="true" />
+    <field id="totalSeries" type="integer" alwaysNotify="true" />
     <field id="error" type="string" alwaysNotify="true" />
   </interface>
 

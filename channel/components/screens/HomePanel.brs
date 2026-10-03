@@ -16,11 +16,18 @@ sub init()
   m.sectionKey = "liveTv"
   m.isLive = true
   m.isVod = false
+  m.isLibrary = false
+  m.filterIndex = 0 ' 0 LIVE, 1 MOVIE, 2 SERIES
+  m.allFavorites = []
+  m.filteredItems = []
+  m.countLive = 0
+  m.countMovie = 0
+  m.countSeries = 0
   m.view = "browse" ' browse | titles
   m.activeCategory = ""
 
-  styleLabel(m.top.findNode("heroTitleA"), 64, "0xFFFFFFFF")
-  styleLabel(m.top.findNode("heroTitleB"), 64, "0xC60057FF")
+  styleLabel(m.top.findNode("heroTitleA"), 72, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("heroTitleB"), 72, "0xC60057FF")
   styleLabel(m.top.findNode("heroDesc"), 24, "0xD6D8E0FF")
   styleLabel(m.top.findNode("vodMeta"), 22, "0xD1D5DBFF")
   styleLabel(m.top.findNode("vodTitle"), 56, "0xFFFFFFFF")
@@ -30,11 +37,17 @@ sub init()
   styleLabel(m.top.findNode("recentTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("catsTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("titlesHeading"), 32, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("libraryTitle"), 32, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("librarySectionTitle"), 28, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("libraryEmpty"), 24, "0x9CA3AFFF")
   styleLabel(m.top.findNode("statusLabel"), 20, "0x9CA3AFFF")
 
   m.task = m.top.createChild("ContentLoadTask")
   m.task.observeField("categories", "onCategories")
   m.task.observeField("channels", "onChannels")
+  m.task.observeField("totalLive", "onFavoriteTotals")
+  m.task.observeField("totalMovies", "onFavoriteTotals")
+  m.task.observeField("totalSeries", "onFavoriteTotals")
   m.task.observeField("error", "onError")
 end sub
 
@@ -60,50 +73,88 @@ sub onPanelShown()
   if sectionKey = invalid or sectionKey = "" then sectionKey = "liveTv"
   m.sectionKey = sectionKey
   m.contentType = sectionToContentType(sectionKey)
-  m.isLive = (sectionKey = "liveTv" or sectionKey = "favorites" or sectionKey = "parental")
+  m.isLibrary = (sectionKey = "favorites" or sectionKey = "parental")
+  m.libraryMode = ""
+  if sectionKey = "favorites" then m.libraryMode = "favorites"
+  if sectionKey = "parental" then m.libraryMode = "parental"
+  m.isLive = (sectionKey = "liveTv")
   m.isVod = (sectionKey = "movies" or sectionKey = "series")
+  m.filterIndex = 0
+  m.allFavorites = []
+  m.filteredItems = []
+  m.libraryCategories = []
+  m.countLive = 0
+  m.countMovie = 0
+  m.countSeries = 0
+  m.libraryShowingCategories = (m.libraryMode = "parental")
 
   showBrowseChrome()
   m.top.findNode("contentRoot").translation = [0, 0]
   m.top.findNode("statusLabel").text = "Loading..."
   m.top.findNode("statusLabel").visible = true
-  m.top.findNode("statusLabel").translation = [72, 640]
-
-  if m.isVod
+  if m.isLibrary
+    m.top.findNode("statusLabel").translation = [72, 280]
+    m.focusZone = "filters"
+    if m.libraryMode = "favorites"
+      m.top.findNode("libraryTitle").text = "Favorites"
+      m.task.contentType = "FAVORITES"
+      m.task.favoriteType = libraryFilterType()
+      m.task.category = ""
+    else
+      m.top.findNode("libraryTitle").text = "Parental Control"
+      m.task.contentType = "PARENTAL"
+      m.task.favoriteType = libraryFilterType()
+      m.task.category = ""
+    end if
+  else if m.isVod
+    m.top.findNode("statusLabel").translation = [72, 640]
     m.focusZone = "hero"
+    m.task.contentType = m.contentType
+    m.task.category = ""
   else
+    m.top.findNode("statusLabel").translation = [72, 640]
     m.focusZone = "recent"
+    m.task.contentType = m.contentType
+    m.task.category = ""
   end if
 
   m.task.playlistId = DuplexLoadActivePlaylistId()
-  m.task.contentType = m.contentType
   m.task.page = 1
   m.task.limit = 50
-  m.task.category = ""
   m.task.control = "RUN"
 end sub
 
 sub showBrowseChrome()
   m.top.findNode("liveHero").visible = m.isLive and m.view = "browse"
   m.top.findNode("vodHero").visible = m.isVod and m.view = "browse"
+  parentalCategoryScreen = (m.isLibrary and m.libraryMode = "parental" and not m.libraryShowingCategories)
+  m.top.findNode("libraryView").visible = m.isLibrary and not parentalCategoryScreen
   m.top.findNode("recentTitle").visible = false
   m.top.findNode("catsTitle").visible = false
   m.top.findNode("recentRoot").visible = (m.isLive or m.isVod) and m.view = "browse"
   m.top.findNode("catsRoot").visible = (m.isLive or m.isVod) and m.view = "browse"
-  m.top.findNode("titlesView").visible = (m.view = "titles")
+  m.top.findNode("titlesView").visible = ((m.view = "titles") and not m.isLibrary) or parentalCategoryScreen
 end sub
 
 function sectionToContentType(sectionKey as String) as String
   if sectionKey = "movies" then return "MOVIE"
   if sectionKey = "series" then return "SERIES"
   if sectionKey = "favorites" then return "FAVORITES"
-  if sectionKey = "parental" then return "LIVE"
+  if sectionKey = "parental" then return "PARENTAL"
   return "LIVE"
 end function
 
 sub onCategories()
   m.categories = m.task.categories
   if m.categories = invalid then m.categories = []
+  if m.isLibrary and m.libraryMode = "parental" and m.libraryShowingCategories
+    m.libraryCategories = m.categories
+    m.top.findNode("statusLabel").visible = false
+    if m.focusZone <> "filters" and m.focusZone <> "grid" then m.focusZone = "filters"
+    m.gridIndex = 0
+    renderLibrary()
+    return
+  end if
   if m.view = "browse" and (m.isLive or m.isVod) then renderCategories()
 end sub
 
@@ -111,6 +162,30 @@ sub onChannels()
   m.channels = m.task.channels
   if m.channels = invalid then m.channels = []
   m.top.findNode("statusLabel").visible = false
+
+  if m.isLibrary
+    if m.libraryMode = "parental" and m.libraryShowingCategories
+      ' Categories arrive via onCategories; ignore empty channel payload
+      return
+    end if
+    if m.libraryMode = "parental" and not m.libraryShowingCategories
+      m.filteredItems = m.channels
+      if m.gridIndex >= m.filteredItems.Count() then m.gridIndex = 0
+      m.focusZone = "grid"
+      renderParentalCategoryItems()
+      return
+    end if
+    m.filteredItems = m.channels
+    if m.libraryMode = "favorites"
+      if m.task.totalLive <> invalid then m.countLive = m.task.totalLive
+      if m.task.totalMovies <> invalid then m.countMovie = m.task.totalMovies
+      if m.task.totalSeries <> invalid then m.countSeries = m.task.totalSeries
+    end if
+    if m.focusZone <> "filters" and m.focusZone <> "grid" then m.focusZone = "filters"
+    if m.gridIndex >= m.filteredItems.Count() then m.gridIndex = 0
+    renderLibrary()
+    return
+  end if
 
   if m.view = "titles"
     if m.channels.Count() = 0
@@ -159,7 +234,7 @@ sub onChannels()
 end sub
 
 sub layoutBrowseY()
-  ' Live hero ~420; VOD hero ~620 — keep recent below hero
+  ' Live hero ~810 (Web); VOD hero ~620 — keep recent below hero
   if m.isVod
     m.top.findNode("recentTitle").translation = [72, 640]
     m.top.findNode("recentRoot").translation = [72, 696]
@@ -167,11 +242,11 @@ sub layoutBrowseY()
     m.top.findNode("catsRoot").translation = [72, 1016]
     m.top.findNode("statusLabel").translation = [72, 640]
   else
-    m.top.findNode("recentTitle").translation = [72, 400]
-    m.top.findNode("recentRoot").translation = [72, 456]
-    m.top.findNode("catsTitle").translation = [72, 720]
-    m.top.findNode("catsRoot").translation = [72, 776]
-    m.top.findNode("statusLabel").translation = [72, 400]
+    m.top.findNode("recentTitle").translation = [72, 822]
+    m.top.findNode("recentRoot").translation = [72, 878]
+    m.top.findNode("catsTitle").translation = [72, 1120]
+    m.top.findNode("catsRoot").translation = [72, 1176]
+    m.top.findNode("statusLabel").translation = [72, 822]
   end if
 end sub
 
@@ -181,7 +256,28 @@ sub onError()
   m.top.findNode("statusLabel").visible = true
   if DuplexIsDev()
     m.categories = DuplexPreviewCategories()
-    if m.isVod
+    if m.isLibrary
+      if m.libraryMode = "parental"
+        m.libraryCategories = DuplexPreviewParentalCategories(libraryFilterType())
+        m.libraryShowingCategories = true
+        m.filteredItems = []
+        m.top.findNode("statusLabel").visible = false
+        renderLibrary()
+        return
+      end if
+      m.channels = DuplexPreviewFavorites()
+      computeFavoriteCounts()
+      m.filteredItems = []
+      want = libraryFilterType()
+      for each item in m.channels
+        ct = item.contentType
+        if ct = invalid then ct = "LIVE"
+        if UCase(ct) = want then m.filteredItems.Push(item)
+      end for
+      m.top.findNode("statusLabel").visible = false
+      renderLibrary()
+      return
+    else if m.isVod
       m.channels = DuplexPreviewVodTitles(m.contentType)
     else
       m.channels = DuplexPreviewLiveChannels()
@@ -191,6 +287,448 @@ sub onError()
     showBrowseChrome()
     onChannels()
   end if
+end sub
+
+sub onFavoriteTotals()
+  if not m.isLibrary then return
+  if m.task.totalLive <> invalid then m.countLive = m.task.totalLive
+  if m.task.totalMovies <> invalid then m.countMovie = m.task.totalMovies
+  if m.task.totalSeries <> invalid then m.countSeries = m.task.totalSeries
+  renderLibraryFilters()
+end sub
+
+sub computeFavoriteCounts()
+  ' Counts come from API totals; kept for preview fallback only.
+  m.countLive = 0
+  m.countMovie = 0
+  m.countSeries = 0
+  for each item in m.channels
+    ct = item.contentType
+    if ct = invalid then ct = "LIVE"
+    ct = UCase(ct)
+    if ct = "MOVIE"
+      m.countMovie = m.countMovie + 1
+    else if ct = "SERIES"
+      m.countSeries = m.countSeries + 1
+    else
+      m.countLive = m.countLive + 1
+    end if
+  end for
+end sub
+
+function libraryFilterType() as String
+  if m.filterIndex = 1 then return "MOVIE"
+  if m.filterIndex = 2 then return "SERIES"
+  return "LIVE"
+end function
+
+sub reloadLibraryFilter()
+  m.top.findNode("statusLabel").text = "Loading..."
+  m.top.findNode("statusLabel").visible = true
+  m.top.findNode("statusLabel").translation = [72, 280]
+  m.gridIndex = 0
+  if m.libraryMode = "parental"
+    m.libraryShowingCategories = true
+    m.activeCategory = ""
+    m.filteredItems = []
+    m.task.contentType = "PARENTAL"
+    m.task.favoriteType = libraryFilterType()
+    m.task.category = ""
+  else
+    m.task.contentType = "FAVORITES"
+    m.task.favoriteType = libraryFilterType()
+    m.task.category = ""
+  end if
+  m.task.page = 1
+  m.task.limit = 50
+  m.task.control = "RUN"
+end sub
+
+sub openParentalCategory(catName as String)
+  m.activeCategory = catName
+  m.libraryShowingCategories = false
+  m.view = "titles"
+  m.focusZone = "grid"
+  m.gridIndex = 0
+  ' Full category screen (Web library--category-view)
+  m.top.findNode("libraryView").visible = false
+  m.top.findNode("titlesView").visible = true
+  m.top.findNode("titlesHeading").text = "Category | " + catName
+  styleLabel(m.top.findNode("titlesHeading"), 36, "0xFFFFFFFF")
+  m.top.findNode("statusLabel").text = "Loading..."
+  m.top.findNode("statusLabel").visible = true
+  m.top.findNode("statusLabel").translation = [72, 120]
+  m.top.findNode("contentRoot").translation = [0, 0]
+  clearChildren(m.top.findNode("gridRoot"))
+  m.task.contentType = "PARENTAL"
+  m.task.favoriteType = libraryFilterType()
+  m.task.category = catName
+  m.task.page = 1
+  m.task.limit = 50
+  m.task.control = "RUN"
+end sub
+
+sub returnParentalToCategories()
+  m.libraryShowingCategories = true
+  m.activeCategory = ""
+  m.filteredItems = []
+  m.view = "browse"
+  m.focusZone = "filters"
+  m.gridIndex = 0
+  m.top.findNode("titlesView").visible = false
+  m.top.findNode("libraryView").visible = true
+  m.top.findNode("statusLabel").visible = false
+  reloadLibraryFilter()
+end sub
+
+sub applyLibraryFilter()
+  reloadLibraryFilter()
+end sub
+
+sub renderLibrary()
+  if m.libraryMode = "parental" and not m.libraryShowingCategories
+    ' Items are shown on the dedicated category screen
+    return
+  end if
+  renderLibraryFilters()
+  if m.libraryMode = "parental" and m.libraryShowingCategories
+    renderParentalCategories()
+  else
+    renderLibraryGrid()
+  end if
+end sub
+
+sub renderParentalCategoryItems()
+  root = m.top.findNode("gridRoot")
+  clearChildren(root)
+  m.top.findNode("titlesView").visible = true
+  m.top.findNode("libraryView").visible = false
+  empty = m.top.findNode("libraryEmpty")
+  empty.visible = false
+
+  if m.filteredItems.Count() = 0
+    m.top.findNode("statusLabel").text = "No content has been restricted under parental control."
+    m.top.findNode("statusLabel").visible = true
+    m.top.findNode("statusLabel").translation = [72, 200]
+    return
+  end if
+  m.top.findNode("statusLabel").visible = false
+
+  liveFilter = (libraryFilterType() = "LIVE")
+  cardW = 327
+  cardH = 184
+  gapX = 35
+  gapY = 48
+  cols = 5
+  maxShow = m.filteredItems.Count()
+  if maxShow > 20 then maxShow = 20
+
+  for i = 0 to maxShow - 1
+    item = m.filteredItems[i]
+    focused = (m.focusZone = "grid" and i = m.gridIndex)
+    col = i mod cols
+    row = Int(i / cols)
+    grp = root.createChild("Group")
+    grp.translation = [col * (cardW + gapX), row * (cardH + gapY)]
+
+    ring = grp.createChild("Poster")
+    ring.translation = [-16, -16]
+    ring.width = 372
+    ring.height = 224
+    ring.uri = "pkg:/images/ui/home-card-focus-ring.png"
+    ring.loadDisplayMode = "scaleToFit"
+    ring.visible = focused
+
+    chrome = grp.createChild("Poster")
+    chrome.width = cardW
+    chrome.height = cardH
+    if liveFilter
+      chrome.uri = "pkg:/images/ui/library-live-card.png"
+    else
+      chrome.uri = "pkg:/images/ui/home-recent-card.png"
+    end if
+    chrome.loadDisplayMode = "scaleToFit"
+
+    poster = grp.createChild("Poster")
+    if liveFilter
+      poster.translation = [24, 24]
+      poster.width = cardW - 48
+      poster.height = cardH - 56
+      poster.loadDisplayMode = "scaleToFit"
+    else
+      poster.translation = [0, 0]
+      poster.width = cardW
+      poster.height = cardH
+      poster.loadDisplayMode = "scaleToFill"
+    end if
+    poster.uri = itemPoster(item)
+
+    if liveFilter
+      accent = grp.createChild("Poster")
+      accent.translation = [14, cardH - 10]
+      accent.width = cardW - 28
+      accent.height = 4
+      accent.uri = "pkg:/images/ui/home-recent-accent.png"
+      accent.loadDisplayMode = "scaleToFit"
+    end if
+
+    lbl = grp.createChild("Label")
+    lbl.translation = [0, cardH + 12]
+    lbl.width = cardW
+    lbl.height = 28
+    name = item.name
+    if name = invalid then name = "Title"
+    lbl.text = UCase(name)
+    lbl.font.size = 16
+    lbl.color = "0xD1D5DBFF"
+  end for
+end sub
+
+sub renderLibraryFilters()
+  root = m.top.findNode("libraryFilters")
+  clearChildren(root)
+  if m.libraryMode = "parental"
+    labels = ["Live TV", "Movies", "Series"]
+    pillW = 220
+  else
+    labels = [
+      "Live TV (" + m.countLive.ToStr() + ")"
+      "Movies (" + m.countMovie.ToStr() + ")"
+      "Series (" + m.countSeries.ToStr() + ")"
+    ]
+    pillW = 280
+  end if
+  iconsLight = [
+    "pkg:/images/ui/library-icon-live.png"
+    "pkg:/images/ui/library-icon-movies.png"
+    "pkg:/images/ui/library-icon-series.png"
+  ]
+  iconsDark = [
+    "pkg:/images/ui/library-icon-live-dark.png"
+    "pkg:/images/ui/library-icon-movies-dark.png"
+    "pkg:/images/ui/library-icon-series-dark.png"
+  ]
+  gap = 16
+  pillH = 64
+  iconSize = 22
+  ' Vertically center icon + label in 64px pill (Web align-items: center)
+  iconY = Int((pillH - iconSize) / 2)
+  labelY = Int((pillH - 28) / 2)
+  padL = 24
+  iconTextGap = 10
+  x = 0
+  for i = 0 to 2
+    selected = (i = m.filterIndex)
+    focused = (m.focusZone = "filters" and i = m.filterIndex)
+    grp = root.createChild("Group")
+    grp.translation = [x, 0]
+
+    ring = grp.createChild("Poster")
+    ring.translation = [-10, -10]
+    ring.width = pillW + 20
+    ring.height = pillH + 20
+    ring.uri = "pkg:/images/ui/library-filter-focus.png"
+    ring.loadDisplayMode = "scaleToFit"
+    ring.visible = focused and selected
+
+    bg = grp.createChild("Poster")
+    bg.width = pillW
+    bg.height = pillH
+    if selected
+      bg.uri = "pkg:/images/ui/library-filter-selected.png"
+    else
+      bg.uri = "pkg:/images/ui/library-filter.png"
+    end if
+    bg.loadDisplayMode = "scaleToFill"
+
+    icon = grp.createChild("Poster")
+    icon.translation = [padL, iconY]
+    icon.width = iconSize
+    icon.height = iconSize
+    if selected
+      icon.uri = iconsDark[i]
+    else
+      icon.uri = iconsLight[i]
+    end if
+    icon.loadDisplayMode = "scaleToFit"
+
+    lbl = grp.createChild("Label")
+    lbl.translation = [padL + iconSize + iconTextGap, labelY]
+    lbl.width = pillW - (padL + iconSize + iconTextGap + 20)
+    lbl.height = 28
+    lbl.vertAlign = "center"
+    lbl.text = labels[i]
+    lbl.font.size = 22
+    if selected
+      lbl.color = "0x111111FF"
+    else
+      lbl.color = "0xFFFFFFFF"
+    end if
+
+    x = x + pillW + gap
+  end for
+end sub
+
+sub renderParentalCategories()
+  root = m.top.findNode("libraryGrid")
+  clearChildren(root)
+  ' Keep grid below filters + section title (do not move to overlap filters)
+  root.translation = [72, 270]
+
+  section = m.top.findNode("librarySectionTitle")
+  section.visible = true
+  section.text = "Browse Categories"
+  section.translation = [72, 214]
+
+  empty = m.top.findNode("libraryEmpty")
+  if m.libraryCategories.Count() = 0
+    empty.visible = true
+    empty.translation = [72, 360]
+    empty.text = "No content has been restricted under parental control."
+    return
+  end if
+  empty.visible = false
+
+  cardW = 327
+  cardH = 184
+  gapX = 35
+  gapY = 18
+  maxShow = m.libraryCategories.Count()
+  if maxShow > 20 then maxShow = 20
+  for i = 0 to maxShow - 1
+    cat = m.libraryCategories[i]
+    name = cat.name
+    if name = invalid then name = "Category"
+    focused = (m.focusZone = "grid" and i = m.gridIndex)
+    col = i mod m.cols
+    row = Int(i / m.cols)
+    grp = root.createChild("Group")
+    grp.translation = [col * (cardW + gapX), row * (cardH + gapY)]
+
+    ring = grp.createChild("Poster")
+    ring.translation = [-16, -16]
+    ring.width = 372
+    ring.height = 224
+    ring.uri = "pkg:/images/ui/home-card-focus-ring.png"
+    ring.loadDisplayMode = "scaleToFit"
+    ring.visible = focused
+
+    bg = grp.createChild("Poster")
+    bg.width = cardW
+    bg.height = cardH
+    if LCase(name) = "all" or LCase(name) = "noticias" or Instr(1, LCase(name), "news") > 0
+      bg.uri = "pkg:/images/ui/home-cat-bg-all.png"
+    else
+      bg.uri = "pkg:/images/ui/home-cat-bg.png"
+    end if
+    bg.loadDisplayMode = "scaleToFit"
+
+    lbl = grp.createChild("Label")
+    lbl.translation = [12, Int(cardH / 2) - 18]
+    lbl.width = cardW - 24
+    lbl.height = 40
+    lbl.horizAlign = "center"
+    lbl.text = UCase(name)
+    lbl.font.size = 22
+    lbl.color = "0xFFFFFFFF"
+  end for
+end sub
+
+sub renderLibraryGrid()
+  root = m.top.findNode("libraryGrid")
+  clearChildren(root)
+  section = m.top.findNode("librarySectionTitle")
+  if m.libraryMode = "parental" and m.activeCategory <> ""
+    section.visible = true
+    section.text = "Category | " + m.activeCategory
+    section.translation = [72, 214]
+    root.translation = [72, 270]
+  else
+    section.visible = false
+    root.translation = [72, 220]
+  end if
+
+  empty = m.top.findNode("libraryEmpty")
+  if m.filteredItems.Count() = 0
+    empty.visible = true
+    empty.translation = [72, 360]
+    if m.libraryMode = "parental"
+      empty.text = "No content has been restricted under parental control."
+    else
+      empty.text = "No favorites in this section yet."
+    end if
+    return
+  end if
+  empty.visible = false
+
+  liveFilter = (libraryFilterType() = "LIVE")
+  cardW = 327
+  cardH = 184
+  gapX = 35
+  gapY = 48
+  cols = 5
+
+  maxShow = m.filteredItems.Count()
+  if maxShow > 15 then maxShow = 15
+  for i = 0 to maxShow - 1
+    item = m.filteredItems[i]
+    focused = (m.focusZone = "grid" and i = m.gridIndex)
+    col = i mod cols
+    row = Int(i / cols)
+    grp = root.createChild("Group")
+    grp.translation = [col * (cardW + gapX), row * (cardH + gapY)]
+
+    ring = grp.createChild("Poster")
+    ring.translation = [-16, -16]
+    ring.width = 372
+    ring.height = 224
+    ring.uri = "pkg:/images/ui/home-card-focus-ring.png"
+    ring.loadDisplayMode = "scaleToFit"
+    ring.visible = focused
+
+    chrome = grp.createChild("Poster")
+    chrome.width = cardW
+    chrome.height = cardH
+    if liveFilter
+      chrome.uri = "pkg:/images/ui/library-live-card.png"
+    else
+      chrome.uri = "pkg:/images/ui/home-recent-card.png"
+    end if
+    chrome.loadDisplayMode = "scaleToFit"
+
+    poster = grp.createChild("Poster")
+    if liveFilter
+      poster.translation = [24, 24]
+      poster.width = cardW - 48
+      poster.height = cardH - 56
+      poster.loadDisplayMode = "scaleToFit"
+    else
+      poster.translation = [0, 0]
+      poster.width = cardW
+      poster.height = cardH
+      poster.loadDisplayMode = "scaleToFill"
+    end if
+    poster.uri = itemPoster(item)
+
+    if liveFilter
+      accent = grp.createChild("Poster")
+      accent.translation = [14, cardH - 10]
+      accent.width = cardW - 28
+      accent.height = 4
+      accent.uri = "pkg:/images/ui/home-recent-accent.png"
+      accent.loadDisplayMode = "scaleToFit"
+    end if
+
+    lbl = grp.createChild("Label")
+    lbl.translation = [0, cardH + 12]
+    lbl.width = cardW
+    lbl.height = 28
+    name = item.name
+    if name = invalid then name = "Title"
+    lbl.text = UCase(name)
+    lbl.font.size = 16
+    lbl.color = "0xD1D5DBFF"
+  end for
 end sub
 
 sub clearChildren(root as Object)
@@ -418,16 +956,28 @@ sub updateScroll()
     if m.isVod
       m.top.findNode("contentRoot").translation = [0, -520]
     else
-      m.top.findNode("contentRoot").translation = [0, -340]
+      ' Tall live hero — scroll so Browse Categories sits near top
+      m.top.findNode("contentRoot").translation = [0, -1040]
     end if
   else if m.focusZone = "recent" and m.isVod
     m.top.findNode("contentRoot").translation = [0, -200]
+  else if m.focusZone = "recent" and m.isLive
+    ' Keep hero dominant; nudge slightly so recent row is fully on-screen
+    m.top.findNode("contentRoot").translation = [0, -40]
   else
     m.top.findNode("contentRoot").translation = [0, 0]
   end if
 end sub
 
 sub refreshFocusVisuals()
+  if m.isLibrary
+    if m.libraryMode = "parental" and not m.libraryShowingCategories
+      renderParentalCategoryItems()
+      return
+    end if
+    renderLibrary()
+    return
+  end if
   if m.view = "titles"
     renderGrid()
     return
@@ -468,7 +1018,11 @@ end sub
 
 function handleKeyEvent(key as String) as Boolean
   if key = "back"
-    if m.view = "titles"
+    if m.isLibrary and m.libraryMode = "parental" and not m.libraryShowingCategories
+      returnParentalToCategories()
+      return true
+    end if
+    if m.view = "titles" and not m.isLibrary
       returnToBrowse()
       return true
     end if
@@ -476,8 +1030,135 @@ function handleKeyEvent(key as String) as Boolean
     return true
   end if
 
+  if m.isLibrary and m.libraryMode = "parental" and not m.libraryShowingCategories
+    return handleParentalCategoryKeys(key)
+  end if
+  if m.isLibrary then return handleLibraryKeys(key)
   if m.view = "titles" then return handleGridKeys(key)
   return handleBrowseKeys(key)
+end function
+
+function handleParentalCategoryKeys(key as String) as Boolean
+  count = m.filteredItems.Count()
+  if key = "up"
+    if m.gridIndex >= m.cols
+      m.gridIndex = m.gridIndex - m.cols
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+  if key = "down"
+    if m.gridIndex + m.cols < count
+      m.gridIndex = m.gridIndex + m.cols
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+  if key = "left"
+    if m.gridIndex > 0
+      m.gridIndex = m.gridIndex - 1
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+  if key = "right"
+    if m.gridIndex < count - 1
+      m.gridIndex = m.gridIndex + 1
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+  if key = "OK"
+    if m.gridIndex >= 0 and m.gridIndex < count
+      m.top.channelSelected = m.filteredItems[m.gridIndex]
+    end if
+    return true
+  end if
+  return false
+end function
+
+function handleLibraryKeys(key as String) as Boolean
+  gridCount = 0
+  if m.libraryMode = "parental" and m.libraryShowingCategories
+    gridCount = m.libraryCategories.Count()
+  else
+    gridCount = m.filteredItems.Count()
+  end if
+
+  if key = "up"
+    if m.focusZone = "grid"
+      if m.gridIndex < m.cols
+        m.focusZone = "filters"
+      else
+        m.gridIndex = m.gridIndex - m.cols
+      end if
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+
+  if key = "down"
+    if m.focusZone = "filters"
+      if gridCount > 0
+        m.focusZone = "grid"
+        m.gridIndex = 0
+        refreshFocusVisuals()
+      end if
+    else if m.gridIndex + m.cols < gridCount
+      m.gridIndex = m.gridIndex + m.cols
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+
+  if key = "left"
+    if m.focusZone = "filters"
+      m.filterIndex = m.filterIndex - 1
+      if m.filterIndex < 0 then m.filterIndex = 0
+      m.gridIndex = 0
+      renderLibraryFilters()
+      reloadLibraryFilter()
+    else if m.gridIndex > 0
+      m.gridIndex = m.gridIndex - 1
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+
+  if key = "right"
+    if m.focusZone = "filters"
+      m.filterIndex = m.filterIndex + 1
+      if m.filterIndex > 2 then m.filterIndex = 2
+      m.gridIndex = 0
+      renderLibraryFilters()
+      reloadLibraryFilter()
+    else if m.gridIndex < gridCount - 1
+      m.gridIndex = m.gridIndex + 1
+      refreshFocusVisuals()
+    end if
+    return true
+  end if
+
+  if key = "OK"
+    if m.focusZone = "filters"
+      if gridCount > 0
+        m.focusZone = "grid"
+        m.gridIndex = 0
+        refreshFocusVisuals()
+      end if
+    else if m.focusZone = "grid"
+      if m.libraryMode = "parental" and m.libraryShowingCategories
+        if m.gridIndex >= 0 and m.gridIndex < m.libraryCategories.Count()
+          openParentalCategory(m.libraryCategories[m.gridIndex].name)
+        end if
+      else if m.gridIndex >= 0 and m.gridIndex < m.filteredItems.Count()
+        m.top.channelSelected = m.filteredItems[m.gridIndex]
+      end if
+    end if
+    return true
+  end if
+
+  return false
 end function
 
 function handleBrowseKeys(key as String) as Boolean

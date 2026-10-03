@@ -1,4 +1,4 @@
-' Watch history GraphQL stubs (Phase 5)
+' Watch history GraphQL — mirrors Duplex_Web_TV watchHistory ops
 function DuplexSaveWatchHistory(input as Object) as Object
     query = "mutation SaveWatchHistory($input: SaveWatchHistoryInput!) { saveWatchHistory(input: $input) }"
     body = {
@@ -8,11 +8,20 @@ function DuplexSaveWatchHistory(input as Object) as Object
     return DuplexGraphqlPost(body)
 end function
 
-function DuplexGetWatchHistory(playlistId as String) as Object
-    query = "query GetWatchHistory($playlistId: String!) { getWatchHistory(playlistId: $playlistId) { items { id name contentType progress } } }"
+function DuplexGetWatchHistory(playlistId as String, page as Integer, limit as Integer, contentType as String) as Object
+    if page < 1 then page = 1
+    if limit < 1 then limit = 50
+    if contentType = invalid or contentType = "" then contentType = "LIVE"
+    query = "query GetWatchHistory($filters: QueryWatchHistoryInput!) { getWatchHistory(filters: $filters) { data { id name type metadata lastWatchedAt watchedPercent } total totalLive totalMovies totalSeries } }"
+    filters = {
+        playlistId: playlistId
+        page: page
+        limit: limit
+        type: contentType
+    }
     body = {
         query: query
-        variables: { playlistId: playlistId }
+        variables: { filters: filters }
     }
     return DuplexGraphqlPost(body)
 end function
@@ -24,7 +33,7 @@ function DuplexClearWatchHistory(playlistId as String, contentType as String) as
         variables: {
             input: {
                 playlistId: playlistId
-                contentType: contentType
+                type: contentType
             }
         }
     }

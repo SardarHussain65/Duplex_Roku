@@ -70,3 +70,13 @@ function DuplexPreviewVodTitles(contentType as String) as Object
         { name: "Silent Harbor", contentType: contentType, groupTitle: kind, genre: kind, plot: "A coastal town hides secrets beneath its quiet surface.", tvgLogo: "", backdropPath: "", releaseYear: 2020 }
     ]
 end function
+
+function DuplexPreviewFavorites() as Object
+    return [
+        { name: "GLOBO EPTV CAMPINAS FHD", contentType: "LIVE", groupTitle: "REDE GLOBO", tvgLogo: "", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+        { name: "JOVEM PAN NEWS FHD", contentType: "LIVE", groupTitle: "News", tvgLogo: "", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+        { name: "BAND NEWS H265", contentType: "LIVE", groupTitle: "News", tvgLogo: "", streamUrl: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+        { name: "1917", contentType: "MOVIE", groupTitle: "War", genre: "War / Drama", plot: "Two young soldiers are given a dangerous mission.", tvgLogo: "", backdropPath: "" }
+        { name: "Night Runner", contentType: "SERIES", groupTitle: "Action", genre: "Action", plot: "A courier is forced into a deadly overnight race.", tvgLogo: "", backdropPath: "" }
+    ]
+end function

@@ -47,6 +47,8 @@ sub wireObservers()
   m.top.findNode("player").observeField("backSelected", "onPlayerBack")
   m.top.findNode("settings").observeField("backSelected", "onSettingsBack")
   m.top.findNode("settings").observeField("logoutSelected", "onSettingsLogout")
+  m.top.findNode("settings").observeField("playlistSelected", "onSettingsPlaylist")
+  m.top.findNode("settings").observeField("changePinSelected", "onSettingsChangePin")
   m.top.findNode("parentalPin").observeField("backSelected", "onParentalPinBack")
   m.top.findNode("parentalPin").observeField("unlockedSelected", "onParentalUnlocked")
 end sub
@@ -217,6 +219,7 @@ sub onHubParental()
   if m.suppressNav then return
   if m.top.findNode("hub").parentalSelected <> true then return
   DuplexLog("Hub Parental → PIN")
+  m.parentalPinReturn = "hub"
   showScreen(DuplexScreenParentalPin(), { mode: "pin" })
 end sub
 
@@ -244,7 +247,7 @@ sub onHomeCategoryPicked()
   if cat = invalid then return
   if cat = "All" then cat = ""
   sectionKey = m.top.findNode("home").initialTab
-  if sectionKey = "liveTv" or sectionKey = "favorites" or sectionKey = "parental"
+  if sectionKey = "liveTv" or sectionKey = "parental"
     showScreen(DuplexScreenLiveChannel(), { browse: { category: cat, channel: invalid } })
   end if
 end sub
@@ -254,7 +257,10 @@ sub onHomeItemPicked()
   channel = m.top.findNode("home").channelSelected
   if channel = invalid then return
   sectionKey = m.top.findNode("home").initialTab
-  if sectionKey = "movies" or sectionKey = "series"
+  contentType = ""
+  if channel.contentType <> invalid then contentType = UCase(channel.contentType)
+
+  if sectionKey = "movies" or sectionKey = "series" or contentType = "MOVIE" or contentType = "SERIES"
     showScreen(DuplexScreenVodDetail(), { item: channel })
   else
     cat = ""
@@ -317,15 +323,37 @@ sub onSettingsLogout()
   showScreen(DuplexScreenActivation(), {})
 end sub
 
+sub onSettingsPlaylist()
+  if m.suppressNav then return
+  playlist = m.top.findNode("settings").playlistSelected
+  if playlist = invalid then return
+  showScreen(DuplexScreenPlaylistLoading(), { playlist: playlist })
+end sub
+
+sub onSettingsChangePin()
+  if m.suppressNav then return
+  if m.top.findNode("settings").changePinSelected <> true then return
+  m.parentalPinReturn = "settings"
+  showScreen(DuplexScreenParentalPin(), { mode: "setup" })
+end sub
+
 sub onParentalPinBack()
   if m.suppressNav then return
   if m.top.findNode("parentalPin").backSelected <> true then return
-  showScreen(DuplexScreenHub(), {})
+  if m.parentalPinReturn = "settings"
+    showScreen(DuplexScreenSettings(), {})
+  else
+    showScreen(DuplexScreenHub(), {})
+  end if
 end sub
 
 sub onParentalUnlocked()
   if m.suppressNav then return
   if m.top.findNode("parentalPin").unlockedSelected <> true then return
+  if m.parentalPinReturn = "settings"
+    showScreen(DuplexScreenSettings(), {})
+    return
+  end if
   m.homeTab = "parental"
   showScreen(DuplexScreenHome(), { section: "parental" })
 end sub

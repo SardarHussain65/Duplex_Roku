@@ -3,23 +3,30 @@
   <interface>
     <field id="backSelected" type="boolean" alwaysNotify="true" />
     <field id="logoutSelected" type="boolean" alwaysNotify="true" />
+    <field id="playlistSelected" type="assocarray" alwaysNotify="true" />
+    <field id="changePinSelected" type="boolean" alwaysNotify="true" />
     <function name="onPanelShown" />
     <function name="handleKeyEvent" />
   </interface>
 
   <children>
-    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
-    <Label id="title" translation="[80, 48]" width="800" height="48" text="Settings" />
+    <Rectangle id="background" width="1920" height="1080" color="0x000000FF" />
 
-    <Group id="navRoot" translation="[80, 140]" />
-    <Rectangle id="divider" translation="[520, 140]" width="2" height="800" color="0x2A2D36FF" />
-    <Label id="detailTitle" translation="[580, 140]" width="1200" height="40" text="" />
-    <Label id="detailBody" translation="[580, 200]" width="1200" height="600" wrap="true" maxLines="18" text="" />
-    <Group id="actionBtn" translation="[580, 820]">
-      <Rectangle id="actionBg" width="420" height="64" color="0x0451DFFF" />
-      <Label id="actionText" translation="[0, 18]" width="420" height="32" horizAlign="center" text="" />
+    <Group id="sideNav" translation="[64, 56]" />
+
+    <Group id="content" translation="[432, 56]">
+      <Group id="head">
+        <Label id="panelTitle" width="980" height="52" text="Language" />
+        <Label id="panelSub" translation="[0, 56]" width="980" height="36" text="" />
+        <Group id="clearHistoryBtn" translation="[1020, 8]" visible="false">
+          <Poster id="clearHistoryBg" width="280" height="56" uri="pkg:/images/ui/settings-btn-danger.png" loadDisplayMode="scaleToFill" />
+          <Poster id="clearHistoryIcon" translation="[36, 18]" width="20" height="20" uri="pkg:/images/ui/settings-trash.png" loadDisplayMode="scaleToFit" />
+          <Label id="clearHistoryText" translation="[64, 0]" width="190" height="56" vertAlign="center" text="Clear All History" />
+        </Group>
+      </Group>
+      <Rectangle id="panelRule" translation="[0, 110]" width="1420" height="1" color="0xFFFFFF1F" />
+      <Group id="bodyRoot" translation="[0, 140]" />
     </Group>
-    <Label id="hint" translation="[80, 1000]" width="1600" height="32" text="Up/Down sections · Left/Right options · OK select · Back return" />
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

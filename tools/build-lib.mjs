@@ -24,6 +24,7 @@ const ORDER = [
   'services/FavoritesService.brs',
   'services/ParentalService.brs',
   'services/WatchHistoryService.brs',
+  'services/SettingsService.brs',
   'core/ScreenIds.brs',
   'core/Session.brs',
 ];

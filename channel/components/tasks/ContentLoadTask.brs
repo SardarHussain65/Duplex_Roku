@@ -36,7 +36,11 @@ sub loadContent()
   if cats.error <> invalid
     if DuplexIsDev()
       m.top.categories = DuplexPreviewCategories()
-      m.top.channels = DuplexPreviewLiveChannels()
+      if contentType = "MOVIE" or contentType = "SERIES"
+        m.top.channels = DuplexPreviewVodTitles(contentType)
+      else
+        m.top.channels = DuplexPreviewLiveChannels()
+      end if
       return
     end if
     m.top.error = cats.error
@@ -47,7 +51,11 @@ sub loadContent()
   if channels.error <> invalid
     if DuplexIsDev()
       m.top.categories = DuplexPreviewCategories()
-      m.top.channels = DuplexPreviewLiveChannels()
+      if contentType = "MOVIE" or contentType = "SERIES"
+        m.top.channels = DuplexPreviewVodTitles(contentType)
+      else
+        m.top.channels = DuplexPreviewLiveChannels()
+      end if
       return
     end if
     m.top.error = channels.error

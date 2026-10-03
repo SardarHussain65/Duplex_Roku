@@ -241,7 +241,8 @@ end sub
 sub onHomeCategoryPicked()
   if m.suppressNav then return
   cat = m.top.findNode("home").categorySelected
-  if cat = invalid or cat = "" then return
+  if cat = invalid then return
+  if cat = "All" then cat = ""
   sectionKey = m.top.findNode("home").initialTab
   if sectionKey = "liveTv" or sectionKey = "favorites" or sectionKey = "parental"
     showScreen(DuplexScreenLiveChannel(), { browse: { category: cat, channel: invalid } })

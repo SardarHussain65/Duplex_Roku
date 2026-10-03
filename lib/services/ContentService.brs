@@ -57,3 +57,16 @@ function DuplexPreviewCategories() as Object
         { name: "Docs", count: 1 }
     ]
 end function
+
+function DuplexPreviewVodTitles(contentType as String) as Object
+    kind = "Movie"
+    if contentType = "SERIES" then kind = "Series"
+    return [
+        { name: "007 Contra a Chantagem", contentType: contentType, groupTitle: "Action / Thriller", genre: "Action / Thriller", plot: "A relentless detective unravels a web of secrets as he hunts a mysterious assassin lurking in the shadows.", tvgLogo: "", backdropPath: "", releaseYear: 2024 }
+        { name: "1917", contentType: contentType, groupTitle: "War", genre: "War / Drama", plot: "Two young soldiers are given a dangerous mission in enemy territory.", tvgLogo: "", backdropPath: "", releaseYear: 2019 }
+        { name: "O Bom Bandido", contentType: contentType, groupTitle: "Drama", genre: "Crime / Drama", plot: "A notorious outlaw seeks redemption while being hunted by rivals.", tvgLogo: "", backdropPath: "", releaseYear: 2021 }
+        { name: "Filhos do Ecstasy", contentType: contentType, groupTitle: "Drama", genre: "Drama", plot: "Friends chase nightlife thrills that spiral out of control.", tvgLogo: "", backdropPath: "", releaseYear: 2022 }
+        { name: "Night Runner", contentType: contentType, groupTitle: "Action", genre: "Action", plot: "A courier is forced into a deadly overnight race across the city.", tvgLogo: "", backdropPath: "", releaseYear: 2023 }
+        { name: "Silent Harbor", contentType: contentType, groupTitle: kind, genre: kind, plot: "A coastal town hides secrets beneath its quiet surface.", tvgLogo: "", backdropPath: "", releaseYear: 2020 }
+    ]
+end function

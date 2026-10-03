@@ -11,20 +11,87 @@
 
   <children>
     <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
-    <Poster
-      id="hero"
-      translation="[0, 0]"
-      uri="pkg:/images/heroImageLiveTV.jpg"
-      width="1920"
-      height="420"
-      loadDisplayMode="scaleToFill"
-      visible="false" />
-    <Rectangle id="heroFade" translation="[0, 280]" width="1920" height="140" color="0x0F1012FF" visible="false" />
-    <Label id="title" translation="[80, 40]" width="800" height="48" text="Live TV" />
-    <Label id="heroTag" translation="[80, 300]" width="800" height="40" text="What's Live Now!" visible="false" />
-    <Label id="statusLabel" translation="[80, 100]" width="1600" height="32" text="Loading channels..." />
-    <Group id="catsRoot" translation="[80, 150]" />
-    <Group id="gridRoot" translation="[80, 240]" />
+
+    <Group id="contentRoot" translation="[0, 0]">
+      <!-- Live hero -->
+      <Group id="liveHero" visible="false">
+        <Poster
+          id="heroArt"
+          translation="[720, 0]"
+          width="1200"
+          height="420"
+          uri="pkg:/images/heroImageLiveTV.jpg"
+          loadDisplayMode="scaleToFill" />
+        <Rectangle id="heroFadeL" translation="[0, 0]" width="900" height="420" color="0x0F1012FF" />
+        <Rectangle id="heroFadeB" translation="[0, 300]" width="1920" height="120" color="0x0F1012FF" />
+        <Poster
+          id="logo"
+          translation="[72, 36]"
+          width="56"
+          height="56"
+          uri="pkg:/images/ActivationImage.png"
+          loadDisplayMode="scaleToFit" />
+        <Label id="heroTitleA" translation="[72, 140]" width="480" height="80" text="What's Live" />
+        <Label id="heroTitleB" translation="[470, 140]" width="220" height="80" text="Now!" />
+        <Label
+          id="heroDesc"
+          translation="[72, 230]"
+          width="720"
+          height="100"
+          wrap="true"
+          text="Jump into live channels and see what's happening right now across news, sports, and entertainment." />
+      </Group>
+
+      <!-- Movies / Series hero -->
+      <Group id="vodHero" visible="false">
+        <Poster
+          id="vodBackdrop"
+          translation="[0, 0]"
+          width="1920"
+          height="620"
+          uri=""
+          loadDisplayMode="scaleToFill" />
+        <Rectangle id="vodFadeL" translation="[0, 0]" width="980" height="620" color="0x0F1012EE" />
+        <Rectangle id="vodFadeB" translation="[0, 420]" width="1920" height="200" color="0x0F1012FF" />
+        <Label id="vodMeta" translation="[72, 160]" width="900" height="32" text="" />
+        <Label id="vodTitle" translation="[72, 200]" width="900" height="90" text="" />
+        <Label id="vodDesc" translation="[72, 300]" width="760" height="90" wrap="true" text="" />
+
+        <Group id="vodActions" translation="[72, 420]">
+          <Group id="btnWatch" translation="[0, 0]">
+            <Poster id="btnWatchRing" translation="[-14, -14]" width="308" height="92" uri="pkg:/images/ui/home-hero-btn-ring.png" loadDisplayMode="scaleToFit" visible="false" />
+            <Poster id="btnWatchBg" width="280" height="64" uri="pkg:/images/ui/home-hero-btn.png" loadDisplayMode="scaleToFit" />
+            <Label id="btnWatchLbl" translation="[0, 16]" width="280" height="36" text="Watch now" horizAlign="center" />
+          </Group>
+          <Group id="btnLearn" translation="[300, 0]">
+            <Poster id="btnLearnRing" translation="[-14, -14]" width="308" height="92" uri="pkg:/images/ui/home-hero-btn-ring.png" loadDisplayMode="scaleToFit" visible="false" />
+            <Poster id="btnLearnBg" width="280" height="64" uri="pkg:/images/ui/home-hero-btn.png" loadDisplayMode="scaleToFit" />
+            <Label id="btnLearnLbl" translation="[0, 16]" width="280" height="36" text="Learn More" horizAlign="center" />
+          </Group>
+        </Group>
+
+        <Group id="vodDots" translation="[880, 560]">
+          <Poster id="dot0" width="16" height="16" uri="pkg:/images/ui/home-dot-on.png" />
+          <Poster id="dot1" translation="[24, 0]" width="16" height="16" uri="pkg:/images/ui/home-dot-off.png" />
+          <Poster id="dot2" translation="[48, 0]" width="16" height="16" uri="pkg:/images/ui/home-dot-off.png" />
+          <Poster id="dot3" translation="[72, 0]" width="16" height="16" uri="pkg:/images/ui/home-dot-off.png" />
+        </Group>
+      </Group>
+
+      <Label id="statusLabel" translation="[72, 640]" width="1600" height="32" text="Loading..." />
+
+      <Label id="recentTitle" translation="[72, 640]" width="600" height="40" text="Recently Watched" visible="false" />
+      <Group id="recentRoot" translation="[72, 696]" />
+
+      <Label id="catsTitle" translation="[72, 960]" width="600" height="40" text="Browse Categories" visible="false" />
+      <Group id="catsRoot" translation="[72, 1016]" />
+
+      <!-- Category titles grid (movies/series after picking a category) -->
+      <Group id="titlesView" visible="false">
+        <Label id="titlesHeading" translation="[72, 40]" width="1600" height="48" text="" />
+        <Group id="gridRoot" translation="[72, 110]" />
+      </Group>
+    </Group>
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

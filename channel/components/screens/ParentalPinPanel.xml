@@ -9,13 +9,55 @@
   </interface>
 
   <children>
-    <Rectangle id="background" width="1920" height="1080" color="0x000000E6" />
-    <Rectangle id="card" translation="[560, 280]" width="800" height="480" color="0x1A1B1FFF" />
-    <Label id="title" translation="[560, 320]" width="800" height="48" horizAlign="center" text="Parental Control" />
-    <Label id="subtitle" translation="[600, 380]" width="720" height="60" horizAlign="center" wrap="true" maxLines="2" text="Enter your 4-digit PIN" />
-    <Label id="pinDisplay" translation="[560, 470]" width="800" height="64" horizAlign="center" text="• • • •" />
-    <Label id="status" translation="[600, 560]" width="720" height="40" horizAlign="center" text="" />
-    <Label id="hint" translation="[600, 640]" width="720" height="60" horizAlign="center" wrap="true" maxLines="2" text="0–9 enter digits · Backspace left · OK submit · Back cancel" />
+    <Rectangle id="background" width="1920" height="1080" color="0x0000009E" />
+
+    <Poster
+      id="card"
+      translation="[640, 290]"
+      width="640"
+      height="500"
+      uri="pkg:/images/ui/pin-modal-card.png"
+      loadDisplayMode="scaleToFill" />
+
+    <Label
+      id="title"
+      translation="[640, 330]"
+      width="640"
+      height="36"
+      horizAlign="center"
+      text="Enter PIN to Continue" />
+
+    <Group id="boxes" translation="[792, 394]">
+      <Poster id="box0" width="72" height="72" uri="pkg:/images/ui/pin-box-active.png" loadDisplayMode="scaleToFit" />
+      <Label id="boxLbl0" translation="[0, 0]" width="72" height="72" horizAlign="center" vertAlign="center" text="-" />
+      <Poster id="box1" translation="[88, 0]" width="72" height="72" uri="pkg:/images/ui/pin-box.png" loadDisplayMode="scaleToFit" />
+      <Label id="boxLbl1" translation="[88, 0]" width="72" height="72" horizAlign="center" vertAlign="center" text="-" />
+      <Poster id="box2" translation="[176, 0]" width="72" height="72" uri="pkg:/images/ui/pin-box.png" loadDisplayMode="scaleToFit" />
+      <Label id="boxLbl2" translation="[176, 0]" width="72" height="72" horizAlign="center" vertAlign="center" text="-" />
+      <Poster id="box3" translation="[264, 0]" width="72" height="72" uri="pkg:/images/ui/pin-box.png" loadDisplayMode="scaleToFit" />
+      <Label id="boxLbl3" translation="[264, 0]" width="72" height="72" horizAlign="center" vertAlign="center" text="-" />
+    </Group>
+
+    <Label
+      id="status"
+      translation="[680, 470]"
+      width="560"
+      height="24"
+      horizAlign="center"
+      text="" />
+
+    <Group id="padRoot" translation="[760, 494]" />
+
+    <Group id="actions" translation="[676, 670]">
+      <Group id="btnCancel">
+        <Poster id="cancelBg" width="276" height="64" uri="pkg:/images/ui/pin-btn-cancel.png" loadDisplayMode="scaleToFit" />
+        <Label id="cancelLbl" translation="[0, 0]" width="276" height="64" horizAlign="center" vertAlign="center" text="Cancel" />
+      </Group>
+      <Group id="btnContinue" translation="[292, 0]">
+        <Poster id="continueBg" width="276" height="64" uri="pkg:/images/ui/pin-btn-continue.png" loadDisplayMode="scaleToFit" />
+        <Label id="continueLbl" translation="[0, 0]" width="276" height="64" horizAlign="center" vertAlign="center" text="Continue" />
+      </Group>
+    </Group>
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

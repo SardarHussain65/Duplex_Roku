@@ -235,11 +235,98 @@ end sub
 
 sub layoutBrowseY()
   ' Live + VOD heroes ~810 (Web) — keep recent below hero
+  m.catScrollOffset = 0
+  m.gridScrollOffset = 0
   m.top.findNode("recentTitle").translation = [72, 822]
   m.top.findNode("recentRoot").translation = [72, 878]
   m.top.findNode("catsTitle").translation = [72, 1120]
   m.top.findNode("catsRoot").translation = [72, 1176]
   m.top.findNode("statusLabel").translation = [72, 822]
+end sub
+
+function catRowPitch() as Integer
+  return 202 ' cardH 184 + gapY 18
+end function
+
+function gridRowPitch() as Integer
+  return 210
+end function
+
+sub updateScroll()
+  if m.view = "titles"
+    ' Keep heading fixed; scroll only the titles grid content
+    m.top.findNode("contentRoot").translation = [0, 0]
+    row = Int(m.gridIndex / m.cols)
+    visibleRows = 4
+    scrollRows = row - (visibleRows - 1)
+    if scrollRows < 0 then scrollRows = 0
+    m.gridScrollOffset = scrollRows * gridRowPitch()
+    m.top.findNode("gridRoot").translation = [72, 110 - m.gridScrollOffset]
+    return
+  end if
+
+  if m.focusZone = "cats"
+    ' Lock page so "Browse Categories" stays put; scroll only catsRoot
+    catsTitleY = 1120
+    catsRootBaseY = 1176
+    pageScroll = 48 - catsTitleY
+    m.top.findNode("contentRoot").translation = [0, pageScroll]
+
+    row = Int(m.catIndex / m.cols)
+    ' Screen space after page scroll: cats start ~104px; ~4 rows fit
+    visibleRows = 4
+    scrollRows = row - (visibleRows - 1)
+    if scrollRows < 0 then scrollRows = 0
+    m.catScrollOffset = scrollRows * catRowPitch()
+    m.top.findNode("catsTitle").translation = [72, catsTitleY]
+    m.top.findNode("catsRoot").translation = [72, catsRootBaseY - m.catScrollOffset]
+  else if m.focusZone = "recent"
+    ' Reset category content offset; nudge page for recent row
+    m.catScrollOffset = 0
+    m.top.findNode("catsRoot").translation = [72, 1176]
+    m.top.findNode("contentRoot").translation = [0, -40]
+  else
+    m.catScrollOffset = 0
+    m.top.findNode("catsRoot").translation = [72, 1176]
+    m.top.findNode("contentRoot").translation = [0, 0]
+  end if
+end sub
+
+sub refreshFocusVisuals()
+  if m.isLibrary
+    if m.libraryMode = "parental" and not m.libraryShowingCategories
+      renderParentalCategoryItems()
+      updateLibraryScroll()
+      return
+    end if
+    renderLibrary()
+    updateLibraryScroll()
+    return
+  end if
+  if m.view = "titles"
+    renderGrid()
+    updateScroll()
+    return
+  end if
+  if m.isVod then updateVodHero()
+  renderRecent()
+  renderCategories()
+  updateScroll()
+end sub
+
+sub updateLibraryScroll()
+  ' Keep filters/title fixed; scroll only the library grid
+  m.top.findNode("contentRoot").translation = [0, 0]
+  if m.focusZone <> "grid"
+    m.top.findNode("libraryGrid").translation = [72, 270]
+    return
+  end if
+  row = Int(m.gridIndex / m.cols)
+  visibleRows = 3
+  scrollRows = row - (visibleRows - 1)
+  if scrollRows < 0 then scrollRows = 0
+  offset = scrollRows * 202
+  m.top.findNode("libraryGrid").translation = [72, 270 - offset]
 end sub
 
 sub onError()
@@ -876,7 +963,7 @@ sub renderCategories()
   gapX = 35
   gapY = 18
   maxShow = m.categories.Count()
-  if maxShow > 20 then maxShow = 20
+  if maxShow > 60 then maxShow = 60
 
   for i = 0 to maxShow - 1
     cat = m.categories[i]
@@ -921,8 +1008,9 @@ end sub
 sub renderGrid()
   root = m.top.findNode("gridRoot")
   clearChildren(root)
-  for i = 0 to m.channels.Count() - 1
-    if i >= 15 then exit for
+  maxShow = m.channels.Count()
+  if maxShow > 60 then maxShow = 60
+  for i = 0 to maxShow - 1
     item = m.channels[i]
     col = i mod m.cols
     row = Int(i / m.cols)
@@ -939,41 +1027,6 @@ sub renderGrid()
   end for
 end sub
 
-sub updateScroll()
-  if m.view = "titles"
-    m.top.findNode("contentRoot").translation = [0, 0]
-    return
-  end if
-  if m.focusZone = "cats"
-    ' Tall hero — scroll so Browse Categories sits near top
-    m.top.findNode("contentRoot").translation = [0, -1040]
-  else if m.focusZone = "recent"
-    ' Keep hero dominant; nudge so recent row is fully on-screen
-    m.top.findNode("contentRoot").translation = [0, -40]
-  else
-    m.top.findNode("contentRoot").translation = [0, 0]
-  end if
-end sub
-
-sub refreshFocusVisuals()
-  if m.isLibrary
-    if m.libraryMode = "parental" and not m.libraryShowingCategories
-      renderParentalCategoryItems()
-      return
-    end if
-    renderLibrary()
-    return
-  end if
-  if m.view = "titles"
-    renderGrid()
-    return
-  end if
-  if m.isVod then updateVodHero()
-  renderRecent()
-  renderCategories()
-  updateScroll()
-end sub
-
 sub openTitlesForCategory(catName as String)
   m.activeCategory = catName
   m.view = "titles"
@@ -985,6 +1038,8 @@ sub openTitlesForCategory(catName as String)
   m.top.findNode("statusLabel").visible = true
   m.top.findNode("statusLabel").translation = [72, 120]
   m.top.findNode("contentRoot").translation = [0, 0]
+  m.gridScrollOffset = 0
+  m.top.findNode("gridRoot").translation = [72, 110]
   m.task.contentType = m.contentType
   m.task.category = catName
   m.task.control = "RUN"

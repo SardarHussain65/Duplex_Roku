@@ -3,6 +3,7 @@
   <interface>
     <field id="sectionSelected" type="string" alwaysNotify="true" />
     <field id="switchPlaylistSelected" type="boolean" alwaysNotify="true" />
+    <field id="playlistPicked" type="assocarray" alwaysNotify="true" />
     <field id="parentalSelected" type="boolean" alwaysNotify="true" />
     <field id="settingsSelected" type="boolean" alwaysNotify="true" />
     <field id="backSelected" type="boolean" alwaysNotify="true" />
@@ -39,6 +40,32 @@
 
     <!-- Centered tile row: (1920 - 4*280 - 3*28) / 2 = 358 -->
     <Group id="tilesRoot" translation="[358, 360]" />
+
+    <!-- Playlist list, same role as Web TV PlaylistSidebarModal -->
+    <Group id="playlistSidebar" visible="false">
+      <Rectangle width="1920" height="1080" color="0x0000008C" />
+      <Rectangle translation="[1400, 0]" width="520" height="1080" color="0x2A2D35FF" />
+      <Rectangle translation="[1400, 0]" width="2" height="1080" color="0xFFFFFF14" />
+      <Label id="sidebarTitle" translation="[1432, 40]" width="456" height="44" text="Playlists" />
+      <Rectangle translation="[1432, 100]" width="456" height="2" color="0x4A4E58FF" />
+      <Label id="sidebarStatus" translation="[1432, 140]" width="456" height="40" text="" visible="false" />
+      <Group id="sidebarList" translation="[1416, 128]" clippingRect="[0, 0, 488, 828]" />
+    </Group>
+
+    <Group id="playlistConfirm" visible="false">
+      <Rectangle width="1920" height="1080" color="0x000000BF" />
+      <Poster translation="[600, 360]" width="720" height="320" uri="pkg:/images/ui/dialog.png" loadDisplayMode="scaleToFill" />
+      <Label id="confirmTitle" translation="[640, 400]" width="640" height="44" horizAlign="center" text="Change Playlist?" />
+      <Label id="confirmCopy" translation="[660, 456]" width="600" height="72" horizAlign="center" wrap="true" maxLines="2" text="Switching will reload all content. Continue?" />
+      <Group id="confirmCancel" translation="[680, 560]">
+        <Poster id="confirmCancelBg" width="260" height="56" uri="pkg:/images/ui/btn-outline-280.png" loadDisplayMode="scaleToFill" />
+        <Label id="confirmCancelText" translation="[0, 14]" width="260" height="28" horizAlign="center" text="Cancel" />
+      </Group>
+      <Group id="confirmOk" translation="[980, 560]">
+        <Poster id="confirmOkBg" width="260" height="56" uri="pkg:/images/ui/btn-white-280.png" loadDisplayMode="scaleToFill" />
+        <Label id="confirmOkText" translation="[0, 14]" width="260" height="28" horizAlign="center" text="Confirm" />
+      </Group>
+    </Group>
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

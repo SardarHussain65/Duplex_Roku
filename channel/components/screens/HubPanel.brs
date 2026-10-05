@@ -11,8 +11,33 @@ sub init()
     { id: "favorites", label: "Favorites", icon: "pkg:/images/ui/hub-tile-favorites.png" }
   ]
 
+  m.sidebarOpen = false
+  m.confirmOpen = false
+  m.confirmFocus = 1
+  m.sidebarFocus = 0
+  m.sidebarScroll = 0
+  m.sidebarVisible = 9
+  m.sidebarRowH = 92
+  m.playlists = []
+  m.sidebarLoading = false
+  m.sidebarError = ""
+  m.playlistTask = invalid
+
+  styleLabel(m.top.findNode("sidebarTitle"), 32, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("sidebarStatus"), 20, "0x9CA3AFFF")
+  styleLabel(m.top.findNode("confirmTitle"), 28, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("confirmCopy"), 20, "0x9CA3AFFF")
+  styleLabel(m.top.findNode("confirmCancelText"), 20, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("confirmOkText"), 20, "0x111111FF")
+
   renderTiles()
   updateFocusVisuals()
+end sub
+
+sub styleLabel(label as Object, size as Integer, color as String)
+  if label = invalid then return
+  label.font.size = size
+  label.color = color
 end sub
 
 sub onPanelShown()
@@ -24,6 +49,7 @@ sub onPanelShown()
   m.top.parentalSelected = false
   m.top.settingsSelected = false
   m.top.backSelected = false
+  closePlaylistSidebar()
   updateFocusVisuals()
 end sub
 
@@ -121,6 +147,9 @@ sub updateFocusVisuals()
 end sub
 
 function handleKeyEvent(key as String) as Boolean
+  if m.confirmOpen then return handleConfirmKey(key)
+  if m.sidebarOpen then return handleSidebarKey(key)
+
   if key = "back"
     m.top.backSelected = true
     return true
@@ -171,7 +200,7 @@ function handleKeyEvent(key as String) as Boolean
   if key = "OK"
     if m.focusZone = "util"
       if m.utilIndex = 0
-        m.top.switchPlaylistSelected = true
+        openPlaylistSidebar()
       else if m.utilIndex = 1
         m.top.parentalSelected = true
       else
@@ -185,6 +214,279 @@ function handleKeyEvent(key as String) as Boolean
 
   return false
 end function
+
+sub openPlaylistSidebar()
+  m.sidebarOpen = true
+  m.confirmOpen = false
+  m.sidebarFocus = 0
+  m.sidebarScroll = 0
+  m.playlists = []
+  m.sidebarLoading = true
+  m.sidebarError = ""
+  m.top.findNode("playlistConfirm").visible = false
+  m.top.findNode("playlistSidebar").visible = true
+  renderSidebar()
+  startPlaylistLoad()
+end sub
+
+sub closePlaylistSidebar()
+  m.sidebarOpen = false
+  m.confirmOpen = false
+  m.sidebarLoading = false
+  stopPlaylistTask()
+  sidebar = m.top.findNode("playlistSidebar")
+  if sidebar <> invalid then sidebar.visible = false
+  confirm = m.top.findNode("playlistConfirm")
+  if confirm <> invalid then confirm.visible = false
+end sub
+
+sub startPlaylistLoad()
+  stopPlaylistTask()
+  m.playlistTask = m.top.createChild("PlaylistLoadTask")
+  m.playlistTask.observeField("playlists", "onSidebarPlaylists")
+  m.playlistTask.observeField("error", "onSidebarError")
+  m.playlistTask.deviceId = DuplexLoadDeviceId()
+  m.playlistTask.control = "RUN"
+end sub
+
+sub stopPlaylistTask()
+  if m.playlistTask = invalid then return
+  m.playlistTask.unobserveField("playlists")
+  m.playlistTask.unobserveField("error")
+  m.playlistTask.control = "stop"
+  m.top.removeChild(m.playlistTask)
+  m.playlistTask = invalid
+end sub
+
+sub onSidebarPlaylists()
+  if not m.sidebarOpen then return
+  if m.playlistTask = invalid then return
+  payload = m.playlistTask.playlists
+  if payload = invalid or payload.items = invalid then return
+  items = payload.items
+  m.sidebarLoading = false
+  m.sidebarError = ""
+  if items.Count() = 0 and DuplexIsDev()
+    items = DuplexPreviewPlaylists()
+  end if
+  m.playlists = items
+  m.sidebarFocus = 0
+  m.sidebarScroll = 0
+  activeId = DuplexLoadActivePlaylistId()
+  for i = 0 to m.playlists.Count() - 1
+    item = m.playlists[i]
+    itemId = ""
+    if item <> invalid and item.id <> invalid then itemId = item.id.ToStr()
+    if itemId <> "" and itemId = activeId
+      m.sidebarFocus = i
+      exit for
+    end if
+  end for
+  ensureSidebarScroll()
+  renderSidebar()
+end sub
+
+sub onSidebarError()
+  if not m.sidebarOpen then return
+  if m.playlistTask = invalid then return
+  message = m.playlistTask.error
+  if message = invalid or message = "" then return
+  m.sidebarLoading = false
+  m.sidebarError = message
+  m.playlists = []
+  renderSidebar()
+end sub
+
+function handleSidebarKey(key as String) as Boolean
+  if key = "back"
+    closePlaylistSidebar()
+    return true
+  end if
+  if m.sidebarLoading or m.sidebarError <> "" then return true
+  count = m.playlists.Count()
+  if count = 0 then return true
+
+  if key = "up"
+    if m.sidebarFocus > 0 then m.sidebarFocus = m.sidebarFocus - 1
+    ensureSidebarScroll()
+    renderSidebar()
+    return true
+  end if
+  if key = "down"
+    if m.sidebarFocus < count - 1 then m.sidebarFocus = m.sidebarFocus + 1
+    ensureSidebarScroll()
+    renderSidebar()
+    return true
+  end if
+  if key = "OK"
+    requestPlaylistSwitch()
+    return true
+  end if
+  return true
+end function
+
+sub requestPlaylistSwitch()
+  if m.sidebarFocus < 0 or m.sidebarFocus >= m.playlists.Count() then return
+  item = m.playlists[m.sidebarFocus]
+  if item = invalid then return
+  activeId = DuplexLoadActivePlaylistId()
+  itemId = ""
+  if item.id <> invalid then itemId = item.id.ToStr()
+  if itemId <> "" and itemId = activeId then return
+  m.confirmOpen = true
+  m.confirmFocus = 1
+  m.top.findNode("playlistConfirm").visible = true
+  updateConfirmFocus()
+end sub
+
+function handleConfirmKey(key as String) as Boolean
+  if key = "back"
+    m.confirmOpen = false
+    m.top.findNode("playlistConfirm").visible = false
+    return true
+  end if
+  if key = "left"
+    m.confirmFocus = 0
+    updateConfirmFocus()
+    return true
+  end if
+  if key = "right"
+    m.confirmFocus = 1
+    updateConfirmFocus()
+    return true
+  end if
+  if key = "OK"
+    if m.confirmFocus = 0
+      m.confirmOpen = false
+      m.top.findNode("playlistConfirm").visible = false
+    else
+      applyPlaylistSwitch()
+    end if
+    return true
+  end if
+  return true
+end function
+
+sub applyPlaylistSwitch()
+  if m.sidebarFocus < 0 or m.sidebarFocus >= m.playlists.Count() then return
+  item = m.playlists[m.sidebarFocus]
+  if item = invalid then return
+  picked = {
+    id: item.id
+    name: item.name
+    url: item.url
+    type: item.type
+    isPinRequired: item.isPinRequired
+  }
+  closePlaylistSidebar()
+  m.top.playlistPicked = picked
+end sub
+
+sub updateConfirmFocus()
+  cancelBg = m.top.findNode("confirmCancelBg")
+  cancelText = m.top.findNode("confirmCancelText")
+  okBg = m.top.findNode("confirmOkBg")
+  okText = m.top.findNode("confirmOkText")
+  if m.confirmFocus = 0
+    cancelBg.uri = "pkg:/images/ui/btn-white-280.png"
+    cancelText.color = "0x111111FF"
+    okBg.uri = "pkg:/images/ui/btn-outline-280.png"
+    okText.color = "0xFFFFFFFF"
+  else
+    cancelBg.uri = "pkg:/images/ui/btn-outline-280.png"
+    cancelText.color = "0xFFFFFFFF"
+    okBg.uri = "pkg:/images/ui/btn-white-280.png"
+    okText.color = "0x111111FF"
+  end if
+end sub
+
+sub ensureSidebarScroll()
+  count = m.playlists.Count()
+  if count = 0 then return
+  if m.sidebarFocus < 0 then m.sidebarFocus = 0
+  if m.sidebarFocus > count - 1 then m.sidebarFocus = count - 1
+  if m.sidebarFocus < m.sidebarScroll
+    m.sidebarScroll = m.sidebarFocus
+  else if m.sidebarFocus >= m.sidebarScroll + m.sidebarVisible
+    m.sidebarScroll = m.sidebarFocus - m.sidebarVisible + 1
+  end if
+end sub
+
+sub renderSidebar()
+  root = m.top.findNode("sidebarList")
+  while root.getChildCount() > 0
+    root.removeChildIndex(0)
+  end while
+
+  status = m.top.findNode("sidebarStatus")
+  if m.sidebarLoading
+    status.visible = true
+    status.text = "Loading playlists..."
+    return
+  end if
+  if m.sidebarError <> ""
+    status.visible = true
+    status.text = m.sidebarError
+    return
+  end if
+  if m.playlists.Count() = 0
+    status.visible = true
+    status.text = "No playlists found."
+    return
+  end if
+  status.visible = false
+
+  activeId = DuplexLoadActivePlaylistId()
+  rowW = 488
+  rowH = 84
+  for i = m.sidebarScroll to m.playlists.Count() - 1
+    vis = i - m.sidebarScroll
+    if vis >= m.sidebarVisible then exit for
+    item = m.playlists[i]
+    row = root.createChild("Group")
+    row.translation = [0, vis * m.sidebarRowH]
+
+    if i = m.sidebarFocus
+      bg = row.createChild("Rectangle")
+      bg.width = rowW
+      bg.height = rowH
+      bg.color = "0x505359FF"
+    end if
+
+    name = "Playlist"
+    if item.name <> invalid and item.name.ToStr() <> "" then name = item.name.ToStr()
+    url = ""
+    if item.url <> invalid then url = item.url.ToStr()
+    if url = "" then url = "No URL provided"
+
+    nameLbl = row.createChild("Label")
+    nameLbl.translation = [18, 14]
+    nameLbl.width = 420
+    nameLbl.height = 30
+    nameLbl.text = name
+    nameLbl.font.size = 22
+    nameLbl.color = "0xFFFFFFFF"
+
+    urlLbl = row.createChild("Label")
+    urlLbl.translation = [18, 46]
+    urlLbl.width = 420
+    urlLbl.height = 24
+    urlLbl.text = DuplexTruncateUrl(url, 42)
+    urlLbl.font.size = 16
+    urlLbl.color = "0x9CA3AFFF"
+
+    itemId = ""
+    if item.id <> invalid then itemId = item.id.ToStr()
+    if itemId <> "" and itemId = activeId
+      check = row.createChild("Poster")
+      check.translation = [448, 30]
+      check.width = 22
+      check.height = 22
+      check.uri = "pkg:/images/ui/settings-check.png"
+      check.loadDisplayMode = "scaleToFit"
+    end if
+  end for
+end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
   if not press then return false

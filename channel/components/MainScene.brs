@@ -8,6 +8,7 @@ sub init()
   m.suppressNav = false
   m.homeTab = "liveTv"
   m.playerReturn = "home"
+  m.loadingReturn = "playlistSource"
 
   wireObservers()
 
@@ -33,7 +34,7 @@ sub wireObservers()
   m.top.findNode("playlistLoading").observeField("backSelected", "onLoadingBack")
   m.top.findNode("playlistLoading").observeField("readySelected", "onLoadingReady")
   m.top.findNode("hub").observeField("sectionSelected", "onHubSection")
-  m.top.findNode("hub").observeField("switchPlaylistSelected", "onHubSwitchPlaylist")
+  m.top.findNode("hub").observeField("playlistPicked", "onHubPlaylistPicked")
   m.top.findNode("hub").observeField("parentalSelected", "onHubParental")
   m.top.findNode("hub").observeField("settingsSelected", "onHubSettings")
   m.top.findNode("hub").observeField("backSelected", "onHubBack")
@@ -167,6 +168,7 @@ sub onPlaylistPicked()
   if m.suppressNav then return
   playlist = m.top.findNode("playlistSource").playlistSelected
   if playlist = invalid then return
+  m.loadingReturn = "playlistSource"
   showScreen(DuplexScreenPlaylistLoading(), { playlist: playlist })
 end sub
 
@@ -186,13 +188,18 @@ sub onXtreamCreated()
   if m.suppressNav then return
   playlist = m.top.findNode("xtreamSetup").playlistCreated
   if playlist = invalid then return
+  m.loadingReturn = "playlistSource"
   showScreen(DuplexScreenPlaylistLoading(), { playlist: playlist })
 end sub
 
 sub onLoadingBack()
   if m.suppressNav then return
   if m.top.findNode("playlistLoading").backSelected <> true then return
-  showScreen(DuplexScreenPlaylistSource(), { focusAdd: m.returnFocusAdd })
+  if m.loadingReturn = "hub"
+    showScreen(DuplexScreenHub(), {})
+  else
+    showScreen(DuplexScreenPlaylistSource(), { focusAdd: m.returnFocusAdd })
+  end if
 end sub
 
 sub onLoadingReady()
@@ -209,10 +216,12 @@ sub onHubSection()
   showScreen(DuplexScreenHome(), { section: section })
 end sub
 
-sub onHubSwitchPlaylist()
+sub onHubPlaylistPicked()
   if m.suppressNav then return
-  if m.top.findNode("hub").switchPlaylistSelected <> true then return
-  showScreen(DuplexScreenPlaylistSource(), { focusAdd: false })
+  playlist = m.top.findNode("hub").playlistPicked
+  if playlist = invalid then return
+  m.loadingReturn = "hub"
+  showScreen(DuplexScreenPlaylistLoading(), { playlist: playlist })
 end sub
 
 sub onHubParental()
@@ -327,6 +336,7 @@ sub onSettingsPlaylist()
   if m.suppressNav then return
   playlist = m.top.findNode("settings").playlistSelected
   if playlist = invalid then return
+  m.loadingReturn = "playlistSource"
   showScreen(DuplexScreenPlaylistLoading(), { playlist: playlist })
 end sub
 

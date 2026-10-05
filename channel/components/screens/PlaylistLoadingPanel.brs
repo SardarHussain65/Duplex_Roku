@@ -36,6 +36,24 @@ sub init()
   m.spinTimer.observeField("fire", "onSpinTick")
 
   renderSteps()
+  setTrackFill(0)
+end sub
+
+' Poster width 0 uses the bitmap's pixel size and draws past the track on 720p.
+' Keep the fill at the track width and reveal it with the clip.
+sub setTrackFill(w as Integer)
+  if w < 0 then w = 0
+  if w > 920 then w = 920
+  fill = m.top.findNode("trackFill")
+  clip = m.top.findNode("trackClip")
+  if w = 0
+    fill.visible = false
+    clip.clippingRect = [0, 0, 0, 8]
+    return
+  end if
+  fill.width = 920
+  fill.visible = true
+  clip.clippingRect = [0, 0, w, 8]
 end sub
 
 sub styleLabel(label as Object, size as Integer, color as String)
@@ -63,7 +81,7 @@ sub onPanelShown()
   end for
   m.phase = "loading"
   m.spinFrame = 0
-  m.top.findNode("trackFill").width = 0
+  setTrackFill(0)
   renderSteps()
   m.spinTimer.control = "start"
 
@@ -113,7 +131,7 @@ sub updateProgress()
   w = Int(920 * pct)
   if w < 8 and pct > 0 then w = 8
   if w > 920 then w = 920
-  m.top.findNode("trackFill").width = w
+  setTrackFill(w)
 end sub
 
 sub renderSteps()
@@ -167,7 +185,7 @@ sub onPrepareComplete()
     m.stepStatus[m.stepOrder[i]] = "done"
   end for
   renderSteps()
-  m.top.findNode("trackFill").width = 920
+  setTrackFill(920)
   m.top.readySelected = true
 end sub
 

@@ -20,7 +20,12 @@
       <Group id="stepsRoot" translation="[40, 276]" />
 
       <Poster id="trackBg" translation="[0, 652]" width="920" height="8" uri="pkg:/images/ui/load-track.png" loadDisplayMode="scaleToFit" />
-      <Poster id="trackFill" translation="[0, 652]" width="0" height="8" uri="pkg:/images/ui/load-fill.png" loadDisplayMode="scaleToFill" />
+      <!-- Fill stays at the track width. A Poster width of 0 is drawn at the
+           bitmap's pixel size, which overshoots this track on 720p. The clip
+           reveals only the completed portion. -->
+      <Group id="trackClip" translation="[0, 652]" clippingRect="[0, 0, 0, 8]">
+        <Poster id="trackFill" width="920" height="8" uri="pkg:/images/ui/load-fill.png" loadDisplayMode="scaleToFill" visible="false" />
+      </Group>
     </Group>
 
     <Group id="errorRoot" translation="[500, 200]" visible="false">

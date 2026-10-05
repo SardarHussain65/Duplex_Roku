@@ -964,7 +964,7 @@ sub activateBody()
   end if
 
   if sec = "cache"
-    ' Best-effort local clear signal; tokens/playlist kept
+    DuplexClearContentCache("")
     DuplexLog("settings: clear cache requested")
     renderAll()
     return

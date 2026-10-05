@@ -45,6 +45,7 @@ sub init()
   styleLabel(m.top.findNode("statusLabel"), 28, "0xFFFFFFFF")
 
   m.task = invalid
+  m.historyTask = invalid
   m.loading = false
   m.skeletonBright = false
   m.skeletonTimer = m.top.createChild("Timer")
@@ -74,6 +75,8 @@ sub onPanelShown()
 
   sectionKey = m.top.initialTab
   if sectionKey = invalid or sectionKey = "" then sectionKey = "liveTv"
+  previousSection = m.sectionKey
+  if previousSection <> sectionKey then m.recent = []
   m.sectionKey = sectionKey
   m.contentType = sectionToContentType(sectionKey)
   m.isLibrary = (sectionKey = "favorites" or sectionKey = "parental")
@@ -112,10 +115,24 @@ sub onPanelShown()
   end if
 
   m.top.findNode("contentRoot").translation = [0, 0]
+  if m.isLibrary
+    stopHistoryTask()
+    clearLoadedContent()
+    showBrowseChrome()
+    showLoadingStatus()
+    startContentTask(contentType, favoriteType, category)
+    return
+  end if
+  if showCachedBrowse(true)
+    startHistoryLoad()
+    return
+  end if
+  m.recent = []
   clearLoadedContent()
   showBrowseChrome()
   showLoadingStatus()
   startContentTask(contentType, favoriteType, category)
+  startHistoryLoad()
 end sub
 
 sub stopContentTask()
@@ -284,6 +301,9 @@ sub onCategories()
   if m.task.categories = invalid then return
   m.categories = m.task.categories
   if m.categories = invalid then m.categories = []
+  if not m.isLibrary
+    DuplexPutCachedCategories(m.task.playlistId, m.contentType, m.categories)
+  end if
   if m.isLibrary and m.libraryMode = "parental" and m.libraryShowingCategories
     m.libraryCategories = m.categories
     m.top.findNode("statusLabel").visible = false
@@ -302,6 +322,11 @@ sub onChannels()
   hideSkeleton()
   m.channels = m.task.channels
   if m.channels = invalid then m.channels = []
+  if not m.isLibrary
+    catName = ""
+    if m.view = "titles" then catName = m.activeCategory
+    DuplexPutCachedChannels(m.task.playlistId, m.contentType, catName, 1, m.channels)
+  end if
   m.top.findNode("statusLabel").visible = false
   showBrowseChrome()
 
@@ -341,14 +366,46 @@ sub onChannels()
     return
   end if
 
-  ' browse
-  m.recent = []
-  maxRecent = m.channels.Count()
-  if maxRecent > 8 then maxRecent = 8
-  for i = 0 to maxRecent - 1
-    m.recent.Push(m.channels[i])
-  end for
+  ' browse — hero and categories come from the catalog; recent is watch history
+  paintBrowse(true)
+end sub
 
+function showCachedBrowse(resetFocus as Boolean) as Boolean
+  playlistId = DuplexLoadActivePlaylistId()
+  cats = DuplexGetCachedCategories(playlistId, m.contentType)
+  channels = DuplexGetCachedChannels(playlistId, m.contentType, "", 1)
+  if cats = invalid or channels = invalid then return false
+  m.loading = false
+  hideSkeleton()
+  m.categories = cats
+  m.channels = channels
+  m.top.findNode("statusLabel").visible = false
+  showBrowseChrome()
+  paintBrowse(resetFocus)
+  return true
+end function
+
+function showCachedTitles(catName as String) as Boolean
+  channels = DuplexGetCachedChannels(DuplexLoadActivePlaylistId(), m.contentType, catName, 1)
+  if channels = invalid then return false
+  m.loading = false
+  hideSkeleton()
+  m.channels = channels
+  m.top.findNode("statusLabel").visible = false
+  if m.channels.Count() = 0
+    m.top.findNode("statusLabel").text = "No titles found"
+    m.top.findNode("statusLabel").visible = true
+    m.top.findNode("statusLabel").translation = [72, 120]
+  end if
+  showBrowseChrome()
+  m.gridIndex = 0
+  m.focusZone = "grid"
+  renderGrid()
+  updateScroll()
+  return true
+end function
+
+sub paintBrowse(resetFocus as Boolean)
   m.heroPool = []
   maxHero = m.channels.Count()
   if maxHero > 4 then maxHero = 4
@@ -360,18 +417,54 @@ sub onChannels()
   m.top.findNode("catsTitle").visible = true
   layoutBrowseY()
 
-  if m.isVod
-    m.focusZone = "hero"
-    m.heroBtn = 0
-    if m.heroSlide >= m.heroPool.Count() then m.heroSlide = 0
-    updateVodHero()
-  else
-    m.focusZone = "recent"
-    if m.recent.Count() = 0 then m.focusZone = "cats"
+  if resetFocus
+    if m.isVod
+      m.focusZone = "hero"
+      m.heroBtn = 0
+      if m.heroSlide >= m.heroPool.Count() then m.heroSlide = 0
+    else
+      m.focusZone = "recent"
+      if m.recent.Count() = 0 then m.focusZone = "cats"
+    end if
   end if
 
+  if m.isVod then updateVodHero()
   renderRecent()
   renderCategories()
+  updateScroll()
+end sub
+
+sub stopHistoryTask()
+  if m.historyTask = invalid then return
+  m.historyTask.unobserveField("channels")
+  m.historyTask.control = "stop"
+  m.top.removeChild(m.historyTask)
+  m.historyTask = invalid
+end sub
+
+sub startHistoryLoad()
+  if m.isLibrary then return
+  stopHistoryTask()
+  m.historyTask = m.top.createChild("ContentLoadTask")
+  m.historyTask.observeField("channels", "onHistory")
+  m.historyTask.playlistId = DuplexLoadActivePlaylistId()
+  m.historyTask.contentType = "HISTORY"
+  m.historyTask.favoriteType = m.contentType
+  m.historyTask.page = 1
+  m.historyTask.limit = 10
+  m.historyTask.control = "RUN"
+end sub
+
+sub onHistory()
+  if m.historyTask = invalid then return
+  if m.historyTask.channels = invalid then return
+  if m.historyTask.favoriteType <> m.contentType then return
+  m.recent = m.historyTask.channels
+  if m.recent = invalid then m.recent = []
+  if m.loading or m.view <> "browse" or m.isLibrary then return
+  if m.recent.Count() = 0 and m.focusZone = "recent" then m.focusZone = "cats"
+  m.top.findNode("recentTitle").visible = (m.recent.Count() > 0)
+  renderRecent()
   updateScroll()
 end sub
 
@@ -1318,6 +1411,7 @@ sub openTitlesForCategory(catName as String)
   m.top.findNode("contentRoot").translation = [0, 0]
   m.gridScrollOffset = 0
   m.top.findNode("gridRoot").translation = [72, titlesGridBaseY()]
+  if showCachedTitles(catName) then return
   clearLoadedContent()
   showBrowseChrome()
   showLoadingStatus()
@@ -1327,11 +1421,23 @@ end sub
 sub returnToBrowse()
   m.view = "browse"
   m.activeCategory = ""
+  if showCachedBrowse(false)
+    m.focusZone = "cats"
+    if m.categories.Count() = 0
+      if m.isVod then m.focusZone = "hero" else m.focusZone = "recent"
+    end if
+    renderRecent()
+    renderCategories()
+    updateScroll()
+    startHistoryLoad()
+    return
+  end if
   clearLoadedContent()
   showBrowseChrome()
   layoutBrowseY()
   showLoadingStatus()
   startContentTask(m.contentType, "LIVE", "")
+  startHistoryLoad()
 end sub
 
 function handleKeyEvent(key as String) as Boolean

@@ -8,6 +8,11 @@ sub loadContent()
   contentType = m.top.contentType
   if contentType = "" then contentType = "LIVE"
 
+  if contentType = "HISTORY"
+    loadHistory()
+    return
+  end if
+
   if contentType = "FAVORITES"
     loadFavorites()
     return
@@ -32,6 +37,25 @@ sub loadContent()
 
   m.top.categories = cats.data
   m.top.channels = channels.data
+end sub
+
+sub loadHistory()
+  playlistId = m.top.playlistId
+  histType = m.top.favoriteType
+  if histType = invalid or histType = "" then histType = "LIVE"
+  limit = m.top.limit
+  if limit < 1 then limit = 10
+  hist = DuplexGetWatchHistory(playlistId, 1, limit, histType)
+  if hist.error <> invalid
+    m.top.error = hist.error
+    return
+  end if
+  rows = []
+  if hist.data <> invalid and hist.data.getWatchHistory <> invalid and hist.data.getWatchHistory.data <> invalid
+    rows = hist.data.getWatchHistory.data
+  end if
+  m.top.categories = []
+  m.top.channels = DuplexMapFavoriteRecords(rows, histType)
 end sub
 
 sub loadFavorites()

@@ -134,6 +134,8 @@ function DuplexPreparePlaylist(playlistId as String) as Object
         end if
     end if
 
+    DuplexClearContentCache(playlistId)
+
     live = DuplexPrefetchContentTab(playlistId, "LIVE")
     if live.error <> invalid
         if DuplexIsDev()
@@ -142,11 +144,33 @@ function DuplexPreparePlaylist(playlistId as String) as Object
         end if
         return live
     end if
+    DuplexRememberPrefetch(playlistId, "LIVE", live.data)
 
     ' Warm MOVIE + SERIES caches (best effort)
-    DuplexPrefetchContentTab(playlistId, "MOVIE")
-    DuplexPrefetchContentTab(playlistId, "SERIES")
+    movies = DuplexPrefetchContentTab(playlistId, "MOVIE")
+    if movies <> invalid and movies.error = invalid then DuplexRememberPrefetch(playlistId, "MOVIE", movies.data)
+    series = DuplexPrefetchContentTab(playlistId, "SERIES")
+    if series <> invalid and series.error = invalid then DuplexRememberPrefetch(playlistId, "SERIES", series.data)
 
     DuplexSaveActivePlaylistId(playlistId)
     return { data: { status: "success" } }
+end function
+
+function DuplexRememberPrefetch(playlistId as String, contentType as String, payload as Object)
+    if payload = invalid then return
+    cats = []
+    rawCats = payload.categories
+    if rawCats <> invalid
+        if rawCats.items <> invalid
+            cats = rawCats.items
+        else if GetInterface(rawCats, "ifArray") <> invalid
+            cats = rawCats
+        end if
+    end if
+    channels = []
+    if payload.channels <> invalid and GetInterface(payload.channels, "ifArray") <> invalid
+        channels = payload.channels
+    end if
+    DuplexPutCachedCategories(playlistId, contentType, cats)
+    DuplexPutCachedChannels(playlistId, contentType, "", 1, channels)
 end function

@@ -75,11 +75,17 @@ sub onPanelShown()
   label = m.category
   if label = "" then label = "All"
   m.top.findNode("header").text = "Category  |  " + label
-  m.channels = []
   m.listIndex = 0
   m.playIndex = 0
   m.favoriteId = ""
   m.lockId = ""
+  cached = DuplexGetCachedChannels(DuplexLoadActivePlaylistId(), "LIVE", m.category, 1)
+  if cached <> invalid
+    m.channels = cached
+    applyLoadedChannels()
+    return
+  end if
+  m.channels = []
   renderList()
   clearPreview()
   showChannelSkeleton()
@@ -161,9 +167,15 @@ end sub
 sub onChannels()
   if not m.loading or m.task = invalid then return
   if m.task.channels = invalid then return
+  m.channels = m.task.channels
+  if m.channels = invalid then m.channels = []
+  DuplexPutCachedChannels(m.task.playlistId, "LIVE", m.category, 1, m.channels)
+  applyLoadedChannels()
+end sub
+
+sub applyLoadedChannels()
   m.loading = false
   hideChannelSkeleton()
-  m.channels = m.task.channels
   if m.channels = invalid then m.channels = []
   m.listIndex = 0
   m.playIndex = 0

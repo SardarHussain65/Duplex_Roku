@@ -21,6 +21,7 @@ const ORDER = [
   'services/PlaylistService.brs',
   'services/PrepareService.brs',
   'services/ContentService.brs',
+  'services/ContentCache.brs',
   'services/FavoritesService.brs',
   'services/ParentalService.brs',
   'services/WatchHistoryService.brs',

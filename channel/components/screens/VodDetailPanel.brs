@@ -72,12 +72,22 @@ sub onPanelShown()
   m.top.findNode("actionStatus").visible = false
   m.favoriteId = ""
   m.lockId = ""
-  showDetailSkeleton()
-
+  m.detailInfo = invalid
   backdropNode = m.top.findNode("backdrop")
   posterNode = m.top.findNode("poster")
   if backdrop <> "" then backdropNode.uri = backdrop else backdropNode.uri = "pkg:/images/heroImageLiveTV.jpg"
   if poster <> "" then posterNode.uri = poster else posterNode.uri = "pkg:/images/heroImageLiveTV.jpg"
+  cached = DuplexGetCachedDetail(DuplexLoadActivePlaylistId(), DuplexContentId(item))
+  if cached <> invalid
+    m.detailInfo = cached.info
+    if cached.favoriteId <> invalid then m.favoriteId = cached.favoriteId
+    if cached.lockId <> invalid then m.lockId = cached.lockId
+    applyInfo(cached.info)
+    hideDetailSkeleton()
+    paintActions()
+    return
+  end if
+  showDetailSkeleton()
   paintActions()
   startDetailLoad()
 end sub
@@ -139,8 +149,18 @@ sub onDetailInfo()
   hideDetailSkeleton()
   if result.favoriteId <> invalid then m.favoriteId = result.favoriteId
   if result.lockId <> invalid then m.lockId = result.lockId
+  m.detailInfo = result.info
   applyInfo(result.info)
+  if result.info <> invalid then rememberDetail()
   paintActions()
+end sub
+
+sub rememberDetail()
+  DuplexPutCachedDetail(DuplexLoadActivePlaylistId(), DuplexContentId(m.top.item), {
+    info: m.detailInfo
+    favoriteId: m.favoriteId
+    lockId: m.lockId
+  })
 end sub
 
 sub applyInfo(info as Object)
@@ -341,6 +361,7 @@ sub onLibraryAction()
     if result.recordId <> invalid then id = result.recordId
     if result.action = "addFavorite" or result.action = "removeFavorite" then m.favoriteId = id
     if result.action = "addLock" or result.action = "removeLock" then m.lockId = id
+    if m.detailInfo <> invalid then rememberDetail()
     m.top.findNode("actionStatus").visible = false
   else
     message = "Could not update"

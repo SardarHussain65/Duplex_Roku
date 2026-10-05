@@ -9,20 +9,72 @@
   </interface>
 
   <children>
-    <Rectangle id="background" width="1920" height="1080" color="0x0F1012FF" />
-    <Poster id="logo" translation="[72, 36]" uri="pkg:/images/ActivationImage.png" width="64" height="64" loadDisplayMode="scaleToFit" />
-    <Label id="header" translation="[152, 48]" width="1400" height="40" text="Live TV" />
+    <Rectangle id="background" width="1920" height="1080" color="0x141416FF" />
 
-    <Label id="listTitle" translation="[72, 120]" width="520" height="32" text="Channels" />
-    <Group id="listRoot" translation="[72, 160]" />
+    <Poster id="logo" translation="[36, 28]" uri="pkg:/images/logo.png" width="56" height="56" loadDisplayMode="scaleToFit" />
+    <Label id="header" translation="[112, 38]" width="1500" height="40" text="Category" />
 
-    <Rectangle id="previewFrame" translation="[640, 120]" width="1180" height="620" color="0x000000FF" />
-    <Video id="previewVideo" translation="[640, 120]" width="1180" height="620" />
-    <Label id="previewHint" translation="[640, 760]" width="1180" height="32" horizAlign="center" text="OK on preview to watch fullscreen · Back to browse" />
+    <Rectangle id="sidebarBg" translation="[36, 108]" width="500" height="948" color="0x1C1E24FF" />
+    <Label id="statusLabel" translation="[64, 148]" width="444" height="80" wrap="true" maxLines="3" text="Loading channels..." />
+    <Group id="listRoot" translation="[48, 120]" clippingRect="[0, 0, 476, 920]" />
 
-    <Label id="metaTitle" translation="[640, 820]" width="1180" height="40" text="" />
-    <Label id="metaSub" translation="[640, 870]" width="1180" height="80" wrap="true" maxLines="2" text="" />
-    <Label id="statusLabel" translation="[72, 980]" width="1600" height="32" text="Loading..." />
+    <Rectangle id="previewBg" translation="[564, 120]" width="760" height="428" color="0x16181EFF" />
+    <Poster id="previewPoster" translation="[564, 120]" width="760" height="428" loadDisplayMode="scaleToFit" />
+    <Video id="previewVideo" translation="[564, 120]" width="760" height="428" />
+    <Label id="previewTitle" translation="[588, 140]" width="700" height="36" text="" />
+    <Group id="liveBadge" translation="[588, 488]">
+      <Rectangle width="108" height="40" color="0xE0334CFF" />
+      <Poster translation="[14, 12]" width="16" height="16" uri="pkg:/images/ui/live-dot.png" loadDisplayMode="scaleToFit" />
+      <Label id="liveBadgeText" translation="[38, 6]" width="60" height="28" text="Live" />
+    </Group>
+    <Group id="previewRing" visible="false">
+      <Rectangle translation="[564, 120]" width="760" height="5" color="0x0451DFFF" />
+      <Rectangle translation="[564, 543]" width="760" height="5" color="0x0451DFFF" />
+      <Rectangle translation="[564, 120]" width="5" height="428" color="0x0451DFFF" />
+      <Rectangle translation="[1319, 120]" width="5" height="428" color="0x0451DFFF" />
+    </Group>
+
+    <Label id="metaLine" translation="[1360, 128]" width="520" height="64" wrap="true" maxLines="2" text="" />
+    <Label id="liveLeft" translation="[1360, 200]" width="520" height="32" text="•  Live left" />
+    <Label id="infoTitle" translation="[1360, 248]" width="520" height="120" wrap="true" maxLines="3" text="" />
+    <Label id="infoDesc" translation="[1360, 380]" width="520" height="80" wrap="true" maxLines="2" text="" />
+
+    <Group id="favBtn" translation="[1360, 478]">
+      <Poster id="favBg" width="80" height="80" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
+      <Poster translation="[22, 22]" width="36" height="36" uri="pkg:/images/ui/live-heart.png" loadDisplayMode="scaleToFit" />
+    </Group>
+    <Group id="lockBtn" translation="[1454, 478]">
+      <Poster id="lockBg" width="80" height="80" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
+      <Poster translation="[22, 22]" width="36" height="36" uri="pkg:/images/ui/hub-icon-lock.png" loadDisplayMode="scaleToFit" />
+    </Group>
+
+    <Rectangle id="epgBg" translation="[564, 572]" width="1320" height="300" color="0x1E1E21FF" />
+    <Label id="epgToday" translation="[588, 592]" width="140" height="36" text="Today" />
+    <Label id="epgChevron" translation="[700, 588]" width="36" height="36" text="▾" />
+    <Label id="epgTime0" translation="[760, 596]" width="120" height="28" text="1:30" />
+    <Label id="epgTime1" translation="[1020, 596]" width="120" height="28" text="2:00" />
+    <Label id="epgTime2" translation="[1280, 596]" width="120" height="28" text="2:30" />
+    <Rectangle translation="[588, 644]" width="1272" height="2" color="0xFFFFFF14" />
+
+    <Group id="epgLogo" translation="[588, 668]">
+      <Rectangle id="epgLogoRing" width="112" height="120" color="0x00000000" />
+      <Rectangle translation="[3, 3]" width="106" height="114" color="0x000000FF" />
+      <Poster id="epgLogoPoster" translation="[10, 10]" width="92" height="100" loadDisplayMode="scaleToFit" />
+    </Group>
+    <Group id="epgNow" translation="[720, 668]">
+      <Rectangle id="epgNowRing" width="540" height="120" color="0x00000000" />
+      <Rectangle translation="[3, 3]" width="534" height="114" color="0x2A2D34FF" />
+      <Label id="epgNowTitle" translation="[20, 18]" width="500" height="32" text="" />
+      <Label id="epgNowSub" translation="[20, 52]" width="500" height="26" text="Live left" />
+      <Rectangle translation="[20, 90]" width="500" height="6" color="0xFFFFFF1F" />
+      <Rectangle translation="[20, 90]" width="175" height="6" color="0x3B82F6FF" />
+    </Group>
+    <Group id="epgNext" translation="[1280, 668]">
+      <Rectangle id="epgNextRing" width="560" height="120" color="0x00000000" />
+      <Rectangle translation="[3, 3]" width="554" height="114" color="0x23262BFF" />
+      <Label id="epgNextTitle" translation="[20, 28]" width="520" height="32" text="" />
+      <Label id="epgNextSub" translation="[20, 66]" width="520" height="26" text="1:30 PM - 2:00 PM" />
+    </Group>
   </children>
 
   <script type="text/brightscript" uri="pkg:/source/DuplexShared.brs" />

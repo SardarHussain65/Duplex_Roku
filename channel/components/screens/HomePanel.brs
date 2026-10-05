@@ -38,6 +38,7 @@ sub init()
   styleLabel(m.top.findNode("recentTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("catsTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("titlesHeading"), 32, "0xFFFFFFFF")
+  styleLabel(m.top.findNode("titlesSearchText"), 26, "0x9CA3AFFF")
   styleLabel(m.top.findNode("libraryTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("librarySectionTitle"), 28, "0xFFFFFFFF")
   styleLabel(m.top.findNode("libraryEmpty"), 24, "0x9CA3AFFF")
@@ -250,20 +251,35 @@ function catRowPitch() as Integer
   return 202 ' cardH 184 + gapY 18
 end function
 
+function titleCols() as Integer
+  if m.isVod then return 6
+  return m.cols
+end function
+
 function gridRowPitch() as Integer
+  if m.view = "titles" and m.isVod then return 470
   return 210
+end function
+
+function titlesGridBaseY() as Integer
+  if m.isVod then return 200
+  return 110
 end function
 
 sub updateScroll()
   if m.view = "titles"
     ' Keep heading fixed; scroll only the titles grid content
     m.top.findNode("contentRoot").translation = [0, 0]
-    row = Int(m.gridIndex / m.cols)
+    cols = titleCols()
+    row = 0
+    if cols > 0 then row = Int(m.gridIndex / cols)
     visibleRows = 4
+    if m.isVod then visibleRows = 2
     scrollRows = row - (visibleRows - 1)
     if scrollRows < 0 then scrollRows = 0
+    if m.focusZone = "search" then scrollRows = 0
     m.gridScrollOffset = scrollRows * gridRowPitch()
-    m.top.findNode("gridRoot").translation = [72, 110 - m.gridScrollOffset]
+    m.top.findNode("gridRoot").translation = [72, titlesGridBaseY() - m.gridScrollOffset]
     return
   end if
 
@@ -818,6 +834,15 @@ sub clearChildren(root as Object)
   end while
 end sub
 
+function posterArt(item as Object) as String
+  if item = invalid then return "pkg:/images/channel-poster.png"
+  if item.tvgLogo <> invalid and item.tvgLogo <> "" then return item.tvgLogo
+  if item.streamIcon <> invalid and item.streamIcon <> "" then return item.streamIcon
+  if item.cover <> invalid and item.cover <> "" then return item.cover
+  if item.backdropPath <> invalid and item.backdropPath <> "" then return item.backdropPath
+  return "pkg:/images/channel-poster.png"
+end function
+
 function itemPoster(item as Object) as String
   if item = invalid then return "pkg:/images/channel-poster.png"
   if item.backdropPath <> invalid and item.backdropPath <> "" then return item.backdropPath
@@ -1041,6 +1066,37 @@ sub renderCategories()
 end sub
 
 sub renderGrid()
+  layoutTitlesChrome()
+  if m.isVod
+    renderPosterGrid()
+  else
+    renderLiveTitleGrid()
+  end if
+  updateScroll()
+end sub
+
+sub layoutTitlesChrome()
+  search = m.top.findNode("titlesSearch")
+  if m.isVod
+    search.visible = true
+    placeholder = "Search for movies..."
+    if m.contentType = "SERIES" then placeholder = "Search for series..."
+    m.top.findNode("titlesSearchText").text = placeholder
+    if m.focusZone = "search"
+      m.top.findNode("titlesSearchFocus").color = "0xFFFFFFFF"
+      m.top.findNode("titlesSearchText").color = "0xFFFFFFFF"
+    else
+      m.top.findNode("titlesSearchFocus").color = "0x00000000"
+      m.top.findNode("titlesSearchText").color = "0x9CA3AFFF"
+    end if
+    m.top.findNode("titlesHeading").translation = [72, 132]
+  else
+    search.visible = false
+    m.top.findNode("titlesHeading").translation = [72, 40]
+  end if
+end sub
+
+sub renderLiveTitleGrid()
   root = m.top.findNode("gridRoot")
   clearChildren(root)
   maxShow = m.channels.Count()
@@ -1062,13 +1118,99 @@ sub renderGrid()
   end for
 end sub
 
+sub renderPosterGrid()
+  root = m.top.findNode("gridRoot")
+  clearChildren(root)
+  cardW = 268
+  posterH = 402
+  gapX = 24
+  cols = 6
+  maxShow = m.channels.Count()
+  if maxShow > 60 then maxShow = 60
+  for i = 0 to maxShow - 1
+    item = m.channels[i]
+    focused = (m.focusZone = "grid" and i = m.gridIndex)
+    col = i mod cols
+    row = Int(i / cols)
+    grp = root.createChild("Group")
+    grp.translation = [col * (cardW + gapX), row * gridRowPitch()]
+
+    if focused
+      border = grp.createChild("Rectangle")
+      border.translation = [-5, -5]
+      border.width = cardW + 10
+      border.height = posterH + 10
+      border.color = "0x0451DFFF"
+    end if
+
+    poster = grp.createChild("Poster")
+    poster.width = cardW
+    poster.height = posterH
+    poster.loadDisplayMode = "scaleToZoom"
+    poster.uri = posterArt(item)
+
+    badge = ratingBadge(item)
+    badgeW = 96
+    chip = grp.createChild("Rectangle")
+    chip.translation = [cardW - badgeW - 12, 14]
+    chip.width = badgeW
+    chip.height = 40
+    chip.color = badge.color
+    badgeLbl = grp.createChild("Label")
+    badgeLbl.translation = [cardW - badgeW - 12, 18]
+    badgeLbl.width = badgeW
+    badgeLbl.height = 32
+    badgeLbl.horizAlign = "center"
+    badgeLbl.text = "★ " + badge.label
+    badgeLbl.font.size = 18
+    badgeLbl.color = "0xFFFFFFFF"
+
+    name = "Title"
+    if item.name <> invalid and item.name <> "" then name = item.name
+    lbl = grp.createChild("Label")
+    lbl.translation = [0, posterH + 12]
+    lbl.width = cardW
+    lbl.height = 32
+    lbl.text = name
+    lbl.font.size = 20
+    if focused
+      lbl.color = "0xFFFFFFFF"
+    else
+      lbl.color = "0xE5E7EBFF"
+    end if
+  end for
+end sub
+
+function ratingBadge(item as Object) as Object
+  raw = invalid
+  if item <> invalid
+    if item.rating5based <> invalid then raw = item.rating5based
+    if (raw = invalid or raw = "") and item.rating_5based <> invalid then raw = item.rating_5based
+    if (raw = invalid or raw = "") and item.rating <> invalid then raw = item.rating
+  end if
+  if raw = invalid or raw.ToStr() = "" then return { label: "N/A", color: "0x64748BFF" }
+  val = Val(raw.ToStr())
+  if val <= 0 then return { label: "N/A", color: "0x64748BFF" }
+  if val > 5 then val = val / 2.0
+  tenths = Int(val * 10 + 0.5)
+  label = Int(tenths / 10).ToStr() + "." + (tenths mod 10).ToStr()
+  color = "0xF97316FF"
+  if val >= 4
+    color = "0x12B76AFF"
+  else if val >= 3
+    color = "0x64748BFF"
+  end if
+  return { label: label, color: color }
+end function
+
 sub openTitlesForCategory(catName as String)
   m.activeCategory = catName
   m.view = "titles"
   showBrowseChrome()
   heading = catName
   if heading = "" then heading = "All"
-  m.top.findNode("titlesHeading").text = heading
+  m.focusZone = "grid"
+  m.top.findNode("titlesHeading").text = "Category | " + heading
   m.top.findNode("statusLabel").text = "Loading..."
   m.top.findNode("statusLabel").visible = true
   m.top.findNode("statusLabel").translation = [72, 120]
@@ -1351,16 +1493,28 @@ function handleBrowseKeys(key as String) as Boolean
 end function
 
 function handleGridKeys(key as String) as Boolean
+  if m.focusZone = "search"
+    if key = "down"
+      m.focusZone = "grid"
+      renderGrid()
+    end if
+    return true
+  end if
+
+  cols = titleCols()
   if key = "up"
-    if m.gridIndex >= m.cols
-      m.gridIndex = m.gridIndex - m.cols
+    if m.isVod and m.gridIndex < cols
+      m.focusZone = "search"
+      renderGrid()
+    else if m.gridIndex >= cols
+      m.gridIndex = m.gridIndex - cols
       renderGrid()
     end if
     return true
   end if
   if key = "down"
-    if m.gridIndex + m.cols < m.channels.Count()
-      m.gridIndex = m.gridIndex + m.cols
+    if m.gridIndex + cols < m.channels.Count()
+      m.gridIndex = m.gridIndex + cols
       renderGrid()
     end if
     return true

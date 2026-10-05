@@ -25,10 +25,7 @@ sub init()
   styleLabel(m.top.findNode("errorCopy"), 22, "0xD6D8E0FF")
   styleLabel(m.top.findNode("errorBackText"), 22, "0x111111FF")
 
-  m.task = m.top.createChild("PlaylistPrepareTask")
-  m.task.observeField("stepUpdate", "onStepUpdate")
-  m.task.observeField("complete", "onPrepareComplete")
-  m.task.observeField("error", "onPrepareError")
+  m.task = invalid
 
   m.spinTimer = m.top.createChild("Timer")
   m.spinTimer.duration = 0.12
@@ -90,6 +87,17 @@ sub onPanelShown()
     playlistId = playlist.id
   end if
 
+  if m.task <> invalid
+    m.task.unobserveField("stepUpdate")
+    m.task.unobserveField("complete")
+    m.task.unobserveField("error")
+    m.task.control = "stop"
+    m.top.removeChild(m.task)
+  end if
+  m.task = m.top.createChild("PlaylistPrepareTask")
+  m.task.observeField("stepUpdate", "onStepUpdate")
+  m.task.observeField("complete", "onPrepareComplete")
+  m.task.observeField("error", "onPrepareError")
   m.task.playlistId = playlistId
   m.task.control = "RUN"
 end sub
@@ -178,6 +186,7 @@ sub renderSteps()
 end sub
 
 sub onPrepareComplete()
+  if m.phase <> "loading" or m.task = invalid or m.task.complete <> true then return
   DuplexLog("playlist ready → hub")
   m.phase = "done"
   m.spinTimer.control = "stop"
@@ -190,6 +199,8 @@ sub onPrepareComplete()
 end sub
 
 sub onPrepareError()
+  if m.phase <> "loading" or m.task = invalid then return
+  if m.task.error = invalid or m.task.error = "" then return
   m.spinTimer.control = "stop"
   showError(m.task.error)
 end sub

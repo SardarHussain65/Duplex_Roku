@@ -42,15 +42,15 @@ sub init()
   styleLabel(m.top.findNode("libraryTitle"), 32, "0xFFFFFFFF")
   styleLabel(m.top.findNode("librarySectionTitle"), 28, "0xFFFFFFFF")
   styleLabel(m.top.findNode("libraryEmpty"), 24, "0x9CA3AFFF")
-  styleLabel(m.top.findNode("statusLabel"), 20, "0x9CA3AFFF")
+  styleLabel(m.top.findNode("statusLabel"), 28, "0xFFFFFFFF")
 
-  m.task = m.top.createChild("ContentLoadTask")
-  m.task.observeField("categories", "onCategories")
-  m.task.observeField("channels", "onChannels")
-  m.task.observeField("totalLive", "onFavoriteTotals")
-  m.task.observeField("totalMovies", "onFavoriteTotals")
-  m.task.observeField("totalSeries", "onFavoriteTotals")
-  m.task.observeField("error", "onError")
+  m.task = invalid
+  m.loading = false
+  m.skeletonBright = false
+  m.skeletonTimer = m.top.createChild("Timer")
+  m.skeletonTimer.duration = 0.7
+  m.skeletonTimer.repeat = true
+  m.skeletonTimer.observeField("fire", "onSkeletonPulse")
 end sub
 
 sub styleLabel(label as Object, size as Integer, color as String)
@@ -91,51 +91,183 @@ sub onPanelShown()
   m.countSeries = 0
   m.libraryShowingCategories = (m.libraryMode = "parental")
 
-  showBrowseChrome()
-  m.top.findNode("contentRoot").translation = [0, 0]
-  m.top.findNode("statusLabel").text = "Loading..."
-  m.top.findNode("statusLabel").visible = true
+  contentType = m.contentType
+  favoriteType = "LIVE"
+  category = ""
   if m.isLibrary
-    m.top.findNode("statusLabel").translation = [72, 280]
     m.focusZone = "filters"
     if m.libraryMode = "favorites"
       m.top.findNode("libraryTitle").text = "Favorites"
-      m.task.contentType = "FAVORITES"
-      m.task.favoriteType = libraryFilterType()
-      m.task.category = ""
+      contentType = "FAVORITES"
+      favoriteType = libraryFilterType()
     else
       m.top.findNode("libraryTitle").text = "Parental Control"
-      m.task.contentType = "PARENTAL"
-      m.task.favoriteType = libraryFilterType()
-      m.task.category = ""
+      contentType = "PARENTAL"
+      favoriteType = libraryFilterType()
     end if
   else if m.isVod
-    m.top.findNode("statusLabel").translation = [72, 640]
     m.focusZone = "hero"
-    m.task.contentType = m.contentType
-    m.task.category = ""
   else
-    m.top.findNode("statusLabel").translation = [72, 640]
     m.focusZone = "recent"
-    m.task.contentType = m.contentType
-    m.task.category = ""
   end if
 
+  m.top.findNode("contentRoot").translation = [0, 0]
+  clearLoadedContent()
+  showBrowseChrome()
+  showLoadingStatus()
+  startContentTask(contentType, favoriteType, category)
+end sub
+
+sub stopContentTask()
+  if m.task = invalid then return
+  m.task.unobserveField("categories")
+  m.task.unobserveField("channels")
+  m.task.unobserveField("totalLive")
+  m.task.unobserveField("totalMovies")
+  m.task.unobserveField("totalSeries")
+  m.task.unobserveField("error")
+  m.task.control = "stop"
+  m.top.removeChild(m.task)
+  m.task = invalid
+end sub
+
+sub clearLoadedContent()
+  m.channels = []
+  m.categories = []
+  m.recent = []
+  m.heroPool = []
+  m.filteredItems = []
+  m.libraryCategories = []
+  clearChildren(m.top.findNode("gridRoot"))
+  clearChildren(m.top.findNode("recentRoot"))
+  clearChildren(m.top.findNode("catsRoot"))
+  clearChildren(m.top.findNode("libraryGrid"))
+  clearChildren(m.top.findNode("libraryFilters"))
+  m.top.findNode("libraryEmpty").visible = false
+  m.top.findNode("recentTitle").visible = false
+  m.top.findNode("catsTitle").visible = false
+  m.top.findNode("heroArt").uri = ""
+  m.top.findNode("vodBackdrop").uri = ""
+  m.top.findNode("vodTitle").text = ""
+  m.top.findNode("vodDesc").text = ""
+  m.top.findNode("vodMeta").text = ""
+end sub
+
+sub showLoadingStatus()
+  m.top.findNode("statusLabel").visible = false
+  kind = "browseLive"
+  if m.isVod then kind = "browseVod"
+  if m.view = "titles"
+    kind = "liveGrid"
+    if m.isVod or libraryFilterType() = "MOVIE" or libraryFilterType() = "SERIES" then kind = "posters"
+  else if m.isLibrary
+    kind = "library"
+  end if
+  DuplexFillSkeleton(m.top.findNode("skeletonRoot"), homeSkeletonBones(kind))
+  m.skeletonBright = false
+  m.skeletonTimer.control = "start"
+end sub
+
+sub hideSkeleton()
+  if m.skeletonTimer <> invalid then m.skeletonTimer.control = "stop"
+  DuplexHideSkeleton(m.top.findNode("skeletonRoot"))
+end sub
+
+sub onSkeletonPulse()
+  if not m.loading then return
+  m.skeletonBright = not m.skeletonBright
+  DuplexPulseSkeleton(m.top.findNode("skeletonRoot"), m.skeletonBright)
+end sub
+
+function homeSkeletonBones(kind as String) as Object
+  bones = []
+  if kind = "posters"
+    ' Search and "Category | …" stay real. Two rows match the visible poster grid.
+    baseY = 200
+    cardW = 268
+    posterH = 402
+    stride = 292
+    rowPitch = 470
+    for row = 0 to 1
+      for col = 0 to 5
+        x = 72 + col * stride
+        y = baseY + row * rowPitch
+        bones.Push({ x: x, y: y, w: cardW, h: posterH })
+        bones.Push({ x: x + cardW - 108, y: y + 14, w: 96, h: 40, tone: "line" })
+        if row = 0
+          bones.Push({ x: x, y: y + posterH + 12, w: cardW - 28, h: 22, tone: "line" })
+        end if
+      end for
+    end for
+  else if kind = "liveGrid"
+    for row = 0 to 2
+      for col = 0 to 4
+        bones.Push({ x: 72 + col * 340, y: 110 + row * 210, w: 280, h: 180 })
+      end for
+    end for
+  else if kind = "library"
+    bones.Push({ x: 72, y: 120, w: 180, h: 56 })
+    bones.Push({ x: 268, y: 120, w: 180, h: 56 })
+    bones.Push({ x: 464, y: 120, w: 180, h: 56 })
+    for col = 0 to 4
+      bones.Push({ x: 72 + col * 351, y: 270, w: 327, h: 184 })
+    end for
+  else if kind = "browseVod"
+    bones.Push({ x: 0, y: 0, w: 1920, h: 810, tone: "hero" })
+    bones.Push({ x: 72, y: 420, w: 280, h: 22, tone: "line" })
+    bones.Push({ x: 72, y: 458, w: 720, h: 36, tone: "line" })
+    bones.Push({ x: 72, y: 506, w: 480, h: 36, tone: "line" })
+    bones.Push({ x: 72, y: 564, w: 680, h: 20, tone: "line" })
+    bones.Push({ x: 72, y: 594, w: 460, h: 20, tone: "line" })
+    bones.Push({ x: 72, y: 670, w: 280, h: 64, tone: "line" })
+    bones.Push({ x: 372, y: 670, w: 280, h: 64, tone: "line" })
+    bones.Push({ x: 936, y: 768, w: 16, h: 16, tone: "line" })
+    bones.Push({ x: 960, y: 768, w: 16, h: 16, tone: "line" })
+    bones.Push({ x: 984, y: 768, w: 16, h: 16, tone: "line" })
+    bones.Push({ x: 1008, y: 768, w: 16, h: 16, tone: "line" })
+    bones.Push({ x: 72, y: 834, w: 280, h: 28, tone: "line" })
+    for i = 0 to 4
+      bones.Push({ x: 72 + i * 362, y: 878, w: 327, h: 184 })
+    end for
+  else
+    bones.Push({ x: 72, y: 822, w: 280, h: 28 })
+    for i = 0 to 4
+      bones.Push({ x: 72 + i * 362, y: 878, w: 327, h: 184 })
+    end for
+  end if
+  return bones
+end function
+
+sub startContentTask(contentType as String, favoriteType as String, category as String)
+  stopContentTask()
+  m.loading = true
+  m.task = m.top.createChild("ContentLoadTask")
+  m.task.observeField("categories", "onCategories")
+  m.task.observeField("channels", "onChannels")
+  m.task.observeField("totalLive", "onFavoriteTotals")
+  m.task.observeField("totalMovies", "onFavoriteTotals")
+  m.task.observeField("totalSeries", "onFavoriteTotals")
+  m.task.observeField("error", "onError")
   m.task.playlistId = DuplexLoadActivePlaylistId()
+  m.task.contentType = contentType
+  m.task.favoriteType = favoriteType
+  m.task.category = category
   m.task.page = 1
   m.task.limit = 50
+  showBrowseChrome()
   m.task.control = "RUN"
 end sub
 
 sub showBrowseChrome()
+  showContent = not m.loading
   m.top.findNode("liveHero").visible = m.isLive and m.view = "browse"
-  m.top.findNode("vodHero").visible = m.isVod and m.view = "browse"
+  m.top.findNode("vodHero").visible = showContent and m.isVod and m.view = "browse"
   parentalCategoryScreen = (m.isLibrary and m.libraryMode = "parental" and not m.libraryShowingCategories)
   m.top.findNode("libraryView").visible = m.isLibrary and not parentalCategoryScreen
   m.top.findNode("recentTitle").visible = false
   m.top.findNode("catsTitle").visible = false
-  m.top.findNode("recentRoot").visible = (m.isLive or m.isVod) and m.view = "browse"
-  m.top.findNode("catsRoot").visible = (m.isLive or m.isVod) and m.view = "browse"
+  m.top.findNode("recentRoot").visible = showContent and (m.isLive or m.isVod) and m.view = "browse"
+  m.top.findNode("catsRoot").visible = showContent and (m.isLive or m.isVod) and m.view = "browse"
   m.top.findNode("titlesView").visible = ((m.view = "titles") and not m.isLibrary) or parentalCategoryScreen
 end sub
 
@@ -148,6 +280,8 @@ function sectionToContentType(sectionKey as String) as String
 end function
 
 sub onCategories()
+  if not m.loading or m.task = invalid then return
+  if m.task.categories = invalid then return
   m.categories = m.task.categories
   if m.categories = invalid then m.categories = []
   if m.isLibrary and m.libraryMode = "parental" and m.libraryShowingCategories
@@ -162,9 +296,14 @@ sub onCategories()
 end sub
 
 sub onChannels()
+  if not m.loading or m.task = invalid then return
+  if m.task.channels = invalid then return
+  m.loading = false
+  hideSkeleton()
   m.channels = m.task.channels
   if m.channels = invalid then m.channels = []
   m.top.findNode("statusLabel").visible = false
+  showBrowseChrome()
 
   if m.isLibrary
     if m.libraryMode = "parental" and m.libraryShowingCategories
@@ -348,45 +487,22 @@ sub updateLibraryScroll()
 end sub
 
 sub onError()
+  if not m.loading or m.task = invalid then return
   err = m.task.error
+  if err = invalid or err = "" then return
+  m.loading = false
+  hideSkeleton()
+  m.channels = []
+  m.categories = []
+  clearLoadedContent()
+  showBrowseChrome()
   m.top.findNode("statusLabel").text = err
   m.top.findNode("statusLabel").visible = true
-  if DuplexIsDev()
-    m.categories = DuplexPreviewCategories()
-    if m.isLibrary
-      if m.libraryMode = "parental"
-        m.libraryCategories = DuplexPreviewParentalCategories(libraryFilterType())
-        m.libraryShowingCategories = true
-        m.filteredItems = []
-        m.top.findNode("statusLabel").visible = false
-        renderLibrary()
-        return
-      end if
-      m.channels = DuplexPreviewFavorites()
-      computeFavoriteCounts()
-      m.filteredItems = []
-      want = libraryFilterType()
-      for each item in m.channels
-        ct = item.contentType
-        if ct = invalid then ct = "LIVE"
-        if UCase(ct) = want then m.filteredItems.Push(item)
-      end for
-      m.top.findNode("statusLabel").visible = false
-      renderLibrary()
-      return
-    else if m.isVod
-      m.channels = DuplexPreviewVodTitles(m.contentType)
-    else
-      m.channels = DuplexPreviewLiveChannels()
-    end if
-    m.top.findNode("statusLabel").visible = false
-    m.view = "browse"
-    showBrowseChrome()
-    onChannels()
-  end if
 end sub
 
 sub onFavoriteTotals()
+  if not m.loading or m.task = invalid then return
+  if m.task.channels = invalid then return
   if not m.isLibrary then return
   if m.task.totalLive <> invalid then m.countLive = m.task.totalLive
   if m.task.totalMovies <> invalid then m.countMovie = m.task.totalMovies
@@ -420,25 +536,19 @@ function libraryFilterType() as String
 end function
 
 sub reloadLibraryFilter()
-  m.top.findNode("statusLabel").text = "Loading..."
-  m.top.findNode("statusLabel").visible = true
-  m.top.findNode("statusLabel").translation = [72, 280]
   m.gridIndex = 0
+  contentType = "FAVORITES"
   if m.libraryMode = "parental"
     m.libraryShowingCategories = true
     m.activeCategory = ""
-    m.filteredItems = []
-    m.task.contentType = "PARENTAL"
-    m.task.favoriteType = libraryFilterType()
-    m.task.category = ""
-  else
-    m.task.contentType = "FAVORITES"
-    m.task.favoriteType = libraryFilterType()
-    m.task.category = ""
+    contentType = "PARENTAL"
   end if
-  m.task.page = 1
-  m.task.limit = 50
-  m.task.control = "RUN"
+  m.filteredItems = []
+  m.view = "browse"
+  clearLoadedContent()
+  showBrowseChrome()
+  showLoadingStatus()
+  startContentTask(contentType, libraryFilterType(), "")
 end sub
 
 sub openParentalCategory(catName as String)
@@ -452,17 +562,11 @@ sub openParentalCategory(catName as String)
   m.top.findNode("titlesView").visible = true
   m.top.findNode("titlesHeading").text = "Category | " + catName
   styleLabel(m.top.findNode("titlesHeading"), 36, "0xFFFFFFFF")
-  m.top.findNode("statusLabel").text = "Loading..."
-  m.top.findNode("statusLabel").visible = true
-  m.top.findNode("statusLabel").translation = [72, 120]
   m.top.findNode("contentRoot").translation = [0, 0]
-  clearChildren(m.top.findNode("gridRoot"))
-  m.task.contentType = "PARENTAL"
-  m.task.favoriteType = libraryFilterType()
-  m.task.category = catName
-  m.task.page = 1
-  m.task.limit = 50
-  m.task.control = "RUN"
+  clearLoadedContent()
+  showBrowseChrome()
+  showLoadingStatus()
+  startContentTask("PARENTAL", libraryFilterType(), catName)
 end sub
 
 sub returnParentalToCategories()
@@ -1211,27 +1315,23 @@ sub openTitlesForCategory(catName as String)
   if heading = "" then heading = "All"
   m.focusZone = "grid"
   m.top.findNode("titlesHeading").text = "Category | " + heading
-  m.top.findNode("statusLabel").text = "Loading..."
-  m.top.findNode("statusLabel").visible = true
-  m.top.findNode("statusLabel").translation = [72, 120]
   m.top.findNode("contentRoot").translation = [0, 0]
   m.gridScrollOffset = 0
-  m.top.findNode("gridRoot").translation = [72, 110]
-  m.task.contentType = m.contentType
-  m.task.category = catName
-  m.task.control = "RUN"
+  m.top.findNode("gridRoot").translation = [72, titlesGridBaseY()]
+  clearLoadedContent()
+  showBrowseChrome()
+  showLoadingStatus()
+  startContentTask(m.contentType, "LIVE", catName)
 end sub
 
 sub returnToBrowse()
   m.view = "browse"
   m.activeCategory = ""
+  clearLoadedContent()
   showBrowseChrome()
   layoutBrowseY()
-  m.top.findNode("statusLabel").text = "Loading..."
-  m.top.findNode("statusLabel").visible = true
-  m.task.contentType = m.contentType
-  m.task.category = ""
-  m.task.control = "RUN"
+  showLoadingStatus()
+  startContentTask(m.contentType, "LIVE", "")
 end sub
 
 function handleKeyEvent(key as String) as Boolean

@@ -66,6 +66,24 @@ function DuplexFetchParentalControls(playlistId as String, page as Integer, limi
     return DuplexGraphqlPost(body)
 end function
 
+function DuplexAddParentalControl(input as Object) as Object
+    query = "mutation AddParentalControl($input: CreateParentalControlInput!) { addParentalControl(input: $input) { id name type } }"
+    body = {
+        query: query
+        variables: { input: input }
+    }
+    return DuplexGraphqlPost(body)
+end function
+
+function DuplexRemoveParentalControl(input as Object) as Object
+    query = "mutation RemoveParentalControl($input: RemoveParentalControlInput!) { removeParentalControl(input: $input) }"
+    body = {
+        query: query
+        variables: { input: input }
+    }
+    return DuplexGraphqlPost(body)
+end function
+
 function DuplexPreviewParentalCategories(contentType as String) as Object
     if contentType = "MOVIE"
         return [

@@ -125,6 +125,45 @@ function DuplexFavoriteRecordToChannel(record as Object, fallbackType as String)
     return channel
 end function
 
+function DuplexMatchLibraryId(response as Object, keyName as String, item as Object) as String
+    if response = invalid or response.error <> invalid or response.data = invalid or item = invalid then return ""
+    payload = response.data[keyName]
+    if payload = invalid or payload.data = invalid then return ""
+    for each row in payload.data
+        if row <> invalid
+            meta = DuplexParseFavoriteMeta(row.metadata)
+            if DuplexLibraryRecordMatches(meta, row, item)
+                if row.id <> invalid then return row.id.ToStr()
+            end if
+        end if
+    end for
+    return ""
+end function
+
+function DuplexLibraryRecordMatches(meta as Object, row as Object, item as Object) as Boolean
+    if item = invalid then return false
+    if meta = invalid then meta = {}
+    itemUrl = duplexFieldText(item, "streamUrl")
+    metaUrl = duplexFieldText(meta, "streamUrl")
+    if itemUrl <> "" and metaUrl <> "" and itemUrl = metaUrl then return true
+    itemId = duplexFieldText(item, "tvgId")
+    metaId = duplexFieldText(meta, "tvgId")
+    if itemId <> "" and metaId <> "" and itemId = metaId then return true
+    seriesId = duplexFieldText(item, "seriesStreamId")
+    metaSeries = duplexFieldText(meta, "seriesStreamId")
+    if seriesId <> "" and metaSeries <> "" and seriesId = metaSeries then return true
+    itemName = duplexFieldText(item, "name")
+    if itemName <> "" and (itemName = duplexFieldText(row, "name") or itemName = duplexFieldText(meta, "name")) then return true
+    return false
+end function
+
+function duplexFieldText(source as Object, keyName as String) as String
+    if source = invalid then return ""
+    value = source[keyName]
+    if value = invalid then return ""
+    return value.ToStr()
+end function
+
 function DuplexMapFavoriteRecords(records as Object, fallbackType as String) as Object
     out = []
     if records = invalid then return out

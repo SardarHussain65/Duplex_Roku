@@ -17,9 +17,8 @@ sub init()
   styleLabel(m.top.findNode("addSub"), 20, "0x9CA3AFFF")
 
   m.listRoot = m.top.findNode("listRoot")
-  m.task = m.top.createChild("PlaylistLoadTask")
-  m.task.observeField("playlists", "onPlaylistsLoaded")
-  m.task.observeField("error", "onPlaylistsError")
+  m.task = invalid
+  m.loading = false
 
   updateAddFocus(false)
 end sub
@@ -34,11 +33,28 @@ sub onPanelShown()
   m.top.addXtreamSelected = false
   m.top.backSelected = false
 
-  m.top.findNode("statusLabel").visible = true
-  m.top.findNode("statusLabel").text = "Loading playlists..."
+  m.top.findNode("statusLabel").visible = false
+  startPlaylistLoad()
+end sub
 
+sub stopPlaylistTask()
+  if m.task = invalid then return
+  m.task.unobserveField("playlists")
+  m.task.unobserveField("error")
+  m.task.control = "stop"
+  m.top.removeChild(m.task)
+  m.task = invalid
+end sub
+
+sub startPlaylistLoad()
+  stopPlaylistTask()
+  m.loading = true
+  m.task = m.top.createChild("PlaylistLoadTask")
+  m.task.observeField("playlists", "onPlaylistsLoaded")
+  m.task.observeField("error", "onPlaylistsError")
   m.task.deviceId = DuplexLoadDeviceId()
   m.task.control = "RUN"
+  showPlaylistSkeleton()
 
   if m.top.focusAddButton
     m.focusArea = "add"
@@ -55,6 +71,33 @@ sub styleLabel(label as Object, size as Integer, color as String)
   if label = invalid then return
   label.font.size = size
   label.color = color
+end sub
+
+sub showPlaylistSkeleton()
+  clearListCards()
+  for i = 0 to 2
+    card = m.listRoot.createChild("Group")
+    card.translation = [0, i * 116]
+    bg = card.createChild("Rectangle")
+    bg.width = 720
+    bg.height = 100
+    bg.color = "0x1C1E24FF"
+    icon = card.createChild("Rectangle")
+    icon.translation = [22, 26]
+    icon.width = 48
+    icon.height = 48
+    icon.color = "0x2A2E38FF"
+    name = card.createChild("Rectangle")
+    name.translation = [88, 28]
+    name.width = 280
+    name.height = 18
+    name.color = "0x2A2E38FF"
+    url = card.createChild("Rectangle")
+    url.translation = [88, 56]
+    url.width = 420
+    url.height = 14
+    url.color = "0x23262EFF"
+  end for
 end sub
 
 sub clearListCards()
@@ -101,24 +144,20 @@ sub updateListFocus()
 end sub
 
 sub onPlaylistsLoaded()
+  if not m.loading or m.task = invalid then return
   payload = m.task.playlists
-  if payload = invalid then return
+  if payload = invalid or payload.items = invalid then return
+  m.loading = false
   items = payload.items
-  if items = invalid then items = []
 
   if items.Count() = 0
-    if DuplexIsDev()
-      DuplexLog("API returned 0 playlists — showing preview list")
-      items = DuplexPreviewPlaylists()
-    else
-      m.top.findNode("statusLabel").visible = true
-      m.top.findNode("statusLabel").text = "No playlists yet. Add an Xtream Codes playlist."
-      m.playlists = []
-      clearListCards()
-      m.focusArea = "add"
-      updateAddFocus(true)
-      return
-    end if
+    m.top.findNode("statusLabel").visible = true
+    m.top.findNode("statusLabel").text = "No playlists yet. Add an Xtream Codes playlist."
+    m.playlists = []
+    clearListCards()
+    m.focusArea = "add"
+    updateAddFocus(true)
+    return
   end if
 
   m.playlists = items
@@ -142,24 +181,17 @@ sub onPlaylistsLoaded()
 end sub
 
 sub onPlaylistsError()
+  if not m.loading or m.task = invalid then return
   err = m.task.error
+  if err = invalid or err = "" then return
+  m.loading = false
   DuplexLog("playlist load failed - " + err)
-  if DuplexIsDev()
-    m.playlists = DuplexPreviewPlaylists()
-    m.top.findNode("statusLabel").visible = false
-    m.focusIndex = 0
-    m.scrollTop = 0
-    renderPlaylists()
-    m.focusArea = "list"
-    updateAddFocus(false)
-  else
-    m.top.findNode("statusLabel").visible = true
-    m.top.findNode("statusLabel").text = err
-    m.playlists = []
-    clearListCards()
-    m.focusArea = "add"
-    updateAddFocus(true)
-  end if
+  m.top.findNode("statusLabel").visible = true
+  m.top.findNode("statusLabel").text = err
+  m.playlists = []
+  clearListCards()
+  m.focusArea = "add"
+  updateAddFocus(true)
 end sub
 
 sub updateAddFocus(focused as Boolean)

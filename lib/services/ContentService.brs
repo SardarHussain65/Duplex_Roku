@@ -25,6 +25,62 @@ function DuplexFetchChannels(playlistId as String, contentType as String, page a
     return { data: items }
 end function
 
+function DuplexContentId(item as Object) as String
+    if item = invalid then return ""
+    candidates = []
+    if item.seriesStreamId <> invalid then candidates.Push(item.seriesStreamId.ToStr())
+    if item.streamId <> invalid then candidates.Push(item.streamId.ToStr())
+    if item.tvgId <> invalid then candidates.Push(item.tvgId.ToStr())
+    if item.streamUrl <> invalid then candidates.Push(item.streamUrl.ToStr())
+    for each raw in candidates
+        text = ""
+        if raw <> invalid then text = raw.ToStr()
+        if text <> ""
+            digits = ""
+            number = true
+            for i = 1 to Len(text)
+                ch = Mid(text, i, 1)
+                if Asc(ch) >= 48 and Asc(ch) <= 57
+                    digits = digits + ch
+                else
+                    number = false
+                    exit for
+                end if
+            end for
+            if number and digits <> "" then return digits
+            if Instr(1, text, "/") > 0
+                leaf = text
+                while Instr(1, leaf, "/") > 0
+                    leaf = Mid(leaf, Instr(1, leaf, "/") + 1)
+                end while
+                idPart = ""
+                for i = 1 to Len(leaf)
+                    ch = Mid(leaf, i, 1)
+                    if Asc(ch) >= 48 and Asc(ch) <= 57
+                        idPart = idPart + ch
+                    else
+                        exit for
+                    end if
+                end for
+                if idPart <> "" then return idPart
+            end if
+        end if
+    end for
+    if item.tvgId <> invalid and item.tvgId.ToStr() <> "" then return item.tvgId.ToStr()
+    return ""
+end function
+
+function DuplexFetchMovieInfo(playlistId as String, vodId as String) as Object
+    if playlistId = "" or vodId = "" then return { error: "Missing movie id" }
+    return DuplexRestGet("/playlists/" + DuplexUrlEncode(playlistId) + "/vod/" + DuplexUrlEncode(vodId) + "/info")
+end function
+
+function DuplexFetchSeriesInfo(playlistId as String, seriesId as String, season as Integer) as Object
+    if playlistId = "" or seriesId = "" then return { error: "Missing series id" }
+    if season < 1 then season = 1
+    return DuplexRestGet("/playlists/" + DuplexUrlEncode(playlistId) + "/series/" + DuplexUrlEncode(seriesId) + "/info?season=" + season.ToStr())
+end function
+
 function DuplexResolveStreamUrl(url as String) as String
     if url = invalid or url = ""
         return ""

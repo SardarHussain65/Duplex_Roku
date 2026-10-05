@@ -15,7 +15,8 @@
     <Label id="header" translation="[112, 38]" width="1500" height="40" text="Category" />
 
     <Rectangle id="sidebarBg" translation="[36, 108]" width="500" height="948" color="0x1C1E24FF" />
-    <Label id="statusLabel" translation="[64, 148]" width="444" height="80" wrap="true" maxLines="3" text="Loading channels..." />
+    <Label id="statusLabel" translation="[64, 148]" width="444" height="80" wrap="true" maxLines="3" visible="false" text="" />
+    <Group id="skeletonRoot" visible="false" />
     <Group id="listRoot" translation="[48, 120]" clippingRect="[0, 0, 476, 920]" />
 
     <Rectangle id="previewBg" translation="[564, 120]" width="760" height="428" color="0x16181EFF" />
@@ -42,10 +43,12 @@
     <Group id="favBtn" translation="[1360, 478]">
       <Poster id="favBg" width="80" height="80" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
       <Poster translation="[22, 22]" width="36" height="36" uri="pkg:/images/ui/live-heart.png" loadDisplayMode="scaleToFit" />
+      <Rectangle id="favOn" translation="[54, 8]" width="16" height="16" color="0xE11D48FF" visible="false" />
     </Group>
     <Group id="lockBtn" translation="[1454, 478]">
       <Poster id="lockBg" width="80" height="80" uri="pkg:/images/ui/hub-util.png" loadDisplayMode="scaleToFit" />
       <Poster translation="[22, 22]" width="36" height="36" uri="pkg:/images/ui/hub-icon-lock.png" loadDisplayMode="scaleToFit" />
+      <Rectangle id="lockOn" translation="[54, 8]" width="16" height="16" color="0x0451DFFF" visible="false" />
     </Group>
 
     <Rectangle id="epgBg" translation="[564, 572]" width="1320" height="300" color="0x1E1E21FF" />

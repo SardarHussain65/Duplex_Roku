@@ -13,6 +13,10 @@ sub init()
   m.parentalHasPin = false
   m.autoplayOn = DuplexLoadAutoplay()
   m.currentLang = DuplexGetLanguage()
+  m.settingsTask = invalid
+  m.sectionLoading = false
+  m.sectionError = ""
+  m.pendingSection = ""
   if m.currentLang = invalid or m.currentLang = "" then m.currentLang = "en"
 
   m.sections = [
@@ -99,73 +103,65 @@ sub onPanelShown()
 end sub
 
 sub loadSectionData()
+  stopSettingsTask()
   sec = m.sections[m.sectionIndex].id
-  playlistId = DuplexLoadActivePlaylistId()
-
-  if sec = "playlist"
-    deviceId = DuplexLoadDeviceId()
-    result = DuplexFetchPlaylists(deviceId)
-    if result <> invalid and result.data <> invalid
-      m.playlists = result.data
-    else if DuplexIsDev()
-      m.playlists = [
-        { id: "1", name: "Live top", url: "https://example.com/live.m3u", type: "url" }
-        { id: "2", name: "Blade", url: "https://example.com/blade.m3u", type: "url" }
-        { id: "3", name: "Xtream Demo", url: "http://demo", type: "xtream" }
-      ]
-    else
-      m.playlists = []
-    end if
-  else if sec = "parental"
-    m.parentalOn = false
-    m.parentalHasPin = false
-    if playlistId <> ""
-      result = DuplexGetParentalToggle(playlistId)
-      if result <> invalid and result.data <> invalid and result.data.getToggleParentalControl <> invalid
-        row = result.data.getToggleParentalControl
-        if row.isRestricted = true then m.parentalOn = true
-        if row.pin <> invalid and row.pin <> "" then m.parentalHasPin = true
-      end if
-    end if
-  else if sec = "history"
-    loadHistory()
-  else if sec = "autoplay"
-    if playlistId <> ""
-      result = DuplexFetchPlaylistAutoplay(playlistId)
-      if result <> invalid and result.data <> invalid
-        m.autoplayOn = result.data = true
-      end if
-    end if
+  m.sectionError = ""
+  m.sectionLoading = false
+  if sec = "playlist" or sec = "parental" or sec = "history" or sec = "autoplay"
+    if sec = "playlist" then m.playlists = []
+    if sec = "history" then m.historyItems = []
+    m.sectionLoading = true
+    startSettingsTask("load")
   end if
 end sub
 
 sub loadHistory()
-  playlistId = DuplexLoadActivePlaylistId()
-  types = ["LIVE", "MOVIE", "SERIES"]
-  contentType = types[m.historyTab]
   m.historyItems = []
-  if playlistId = ""
-    if DuplexIsDev()
-      m.historyCounts = { LIVE: 24, MOVIE: 22, SERIES: 4 }
-      m.historyItems = [
-        { id: "h1", name: "APPLE TV+ 1", type: "LIVE", lastWatchedAt: "2026-10-03" }
-        { id: "h2", name: "GLOBO SP H265", type: "LIVE", lastWatchedAt: "2026-10-02" }
-      ]
-    end if
-    return
-  end if
-  result = DuplexGetWatchHistory(playlistId, 1, 50, contentType)
-  if result.error <> invalid
-    DuplexLog("settings history error: " + result.error)
-    return
-  end if
-  payload = invalid
-  if result.data <> invalid then payload = result.data.getWatchHistory
-  if payload = invalid then return
-  if payload.data <> invalid then m.historyItems = payload.data
-  if payload.totalLive <> invalid then m.historyCounts.LIVE = payload.totalLive
-  if payload.totalMovies <> invalid then m.historyCounts.MOVIE = payload.totalMovies
-  if payload.totalSeries <> invalid then m.historyCounts.SERIES = payload.totalSeries
+  m.sectionError = ""
+  m.sectionLoading = true
+  startSettingsTask("load")
+end sub
+
+sub stopSettingsTask()
+  if m.settingsTask = invalid then return
+  m.settingsTask.unobserveField("result")
+  m.settingsTask.control = "stop"
+  m.top.removeChild(m.settingsTask)
+  m.settingsTask = invalid
+end sub
+
+sub startSettingsTask(action as String)
+  stopSettingsTask()
+  m.pendingSection = m.sections[m.sectionIndex].id
+  m.settingsTask = m.top.createChild("SettingsLoadTask")
+  m.settingsTask.observeField("result", "onSettingsResult")
+  m.settingsTask.section = m.pendingSection
+  m.settingsTask.action = action
+  m.settingsTask.playlistId = DuplexLoadActivePlaylistId()
+  m.settingsTask.deviceId = DuplexLoadDeviceId()
+  types = ["LIVE", "MOVIE", "SERIES"]
+  m.settingsTask.historyType = types[m.historyTab]
+  m.settingsTask.autoplay = not m.autoplayOn
+  m.settingsTask.control = "RUN"
+end sub
+
+sub onSettingsResult()
+  if m.settingsTask = invalid then return
+  result = m.settingsTask.result
+  if result = invalid or result.section = invalid then return
+  if result.section <> m.pendingSection then return
+  m.sectionLoading = false
+  m.sectionError = ""
+  if result.error <> invalid and result.error <> "" then m.sectionError = result.error
+  if result.playlists <> invalid then m.playlists = result.playlists
+  if result.parentalOn <> invalid then m.parentalOn = (result.parentalOn = true)
+  if result.parentalHasPin <> invalid then m.parentalHasPin = (result.parentalHasPin = true)
+  if result.historyItems <> invalid then m.historyItems = result.historyItems
+  if result.totalLive <> invalid then m.historyCounts.LIVE = result.totalLive
+  if result.totalMovies <> invalid then m.historyCounts.MOVIE = result.totalMovies
+  if result.totalSeries <> invalid then m.historyCounts.SERIES = result.totalSeries
+  if result.autoplayOn <> invalid then m.autoplayOn = (result.autoplayOn = true)
+  renderAll()
 end sub
 
 sub renderAll()
@@ -247,6 +243,37 @@ sub renderBody()
   root = m.top.findNode("bodyRoot")
   clearGroup(root)
   sec = m.sections[m.sectionIndex].id
+  if m.sectionLoading and (sec = "playlist" or sec = "parental" or sec = "history" or sec = "autoplay")
+    for i = 0 to 3
+      card = root.createChild("Rectangle")
+      card.translation = [0, i * 112]
+      card.width = 860
+      card.height = 96
+      card.color = "0x1C1E24FF"
+      line = root.createChild("Rectangle")
+      line.translation = [24, i * 112 + 28]
+      line.width = 280
+      line.height = 18
+      line.color = "0x2A2E38FF"
+      subLine = root.createChild("Rectangle")
+      subLine.translation = [24, i * 112 + 56]
+      subLine.width = 460
+      subLine.height = 14
+      subLine.color = "0x23262EFF"
+    end for
+    return
+  end if
+  if m.sectionError <> "" and (sec = "playlist" or sec = "parental" or sec = "history" or sec = "autoplay")
+    lbl = root.createChild("Label")
+    lbl.translation = [0, 80]
+    lbl.width = 900
+    lbl.height = 80
+    lbl.wrap = true
+    lbl.text = m.sectionError
+    lbl.font.size = 24
+    lbl.color = "0xF5C451FF"
+    return
+  end if
   if sec = "language"
     renderLanguage(root)
   else if sec = "cache"
@@ -971,15 +998,13 @@ sub activateBody()
         return
       end if
       if playlistId <> ""
-        result = DuplexToggleParentalControl(playlistId)
-        if result <> invalid and result.data <> invalid and result.data.toggleParentalControl <> invalid
-          m.parentalOn = result.data.toggleParentalControl.isRestricted = true
-        else
-          m.parentalOn = not m.parentalOn
-        end if
-      else
-        m.parentalOn = not m.parentalOn
+        m.sectionLoading = true
+        m.sectionError = ""
+        renderAll()
+        startSettingsTask("toggleParental")
+        return
       end if
+      m.parentalOn = not m.parentalOn
       renderAll()
     else
       m.top.changePinSelected = true
@@ -990,15 +1015,15 @@ sub activateBody()
   if sec = "history"
     if idx = 0
       playlistId = DuplexLoadActivePlaylistId()
-      types = ["LIVE", "MOVIE", "SERIES"]
-      contentType = types[m.historyTab]
       if playlistId <> ""
-        DuplexClearWatchHistory(playlistId, contentType)
+        m.historyItems = []
+        m.sectionLoading = true
+        m.sectionError = ""
+        renderAll()
+        startSettingsTask("clearHistory")
+        return
       end if
       m.historyItems = []
-      if contentType = "LIVE" then m.historyCounts.LIVE = 0
-      if contentType = "MOVIE" then m.historyCounts.MOVIE = 0
-      if contentType = "SERIES" then m.historyCounts.SERIES = 0
       renderAll()
       return
     end if
@@ -1013,15 +1038,10 @@ sub activateBody()
   end if
 
   if sec = "autoplay"
-    nextVal = not m.autoplayOn
-    playlistId = DuplexLoadActivePlaylistId()
-    result = DuplexTogglePlaylistAutoplay(playlistId, nextVal)
-    if result <> invalid and result.data <> invalid
-      m.autoplayOn = result.data = true
-    else
-      m.autoplayOn = nextVal
-    end if
+    m.sectionLoading = true
+    m.sectionError = ""
     renderAll()
+    startSettingsTask("toggleAutoplay")
   end if
 end sub
 

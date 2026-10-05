@@ -41,15 +41,23 @@
           </Group>
           <Poster id="favBg" translation="[344, -4]" width="80" height="80" uri="pkg:/images/ui/hub-util.png" />
           <Poster id="favIcon" translation="[364, 16]" width="40" height="40" uri="pkg:/images/ui/live-heart.png" />
+          <Rectangle id="favOn" translation="[400, 0]" width="16" height="16" color="0xE11D48FF" visible="false" />
           <Poster id="lockBg" translation="[440, -4]" width="80" height="80" uri="pkg:/images/ui/hub-util.png" />
           <Poster id="lockIcon" translation="[460, 16]" width="40" height="40" uri="pkg:/images/ui/hub-icon-lock.png" />
+          <Rectangle id="lockOn" translation="[496, 0]" width="16" height="16" color="0x0451DFFF" visible="false" />
         </Group>
 
         <Group id="castRow" translation="[0, 580]">
           <Label id="castLabel" width="90" height="36" text="Cast:" />
           <Label id="castNames" translation="[100, 0]" width="1100" height="36" text="" />
         </Group>
+        <Label id="actionStatus" translation="[0, 630]" width="1100" height="36" text="" visible="false" />
       </Group>
+    </Group>
+
+    <Group id="loadingOverlay" visible="false">
+      <Rectangle width="1920" height="1080" color="0x141416E6" />
+      <Group id="detailSkeleton" />
     </Group>
   </children>
 

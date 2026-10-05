@@ -81,7 +81,8 @@
         </Group>
       </Group>
 
-      <Label id="statusLabel" translation="[72, 640]" width="1600" height="32" text="Loading..." />
+      <Label id="statusLabel" translation="[72, 640]" width="1600" height="40" text="" visible="false" />
+      <Group id="skeletonRoot" visible="false" />
 
       <Label id="recentTitle" translation="[72, 640]" width="600" height="40" text="Recently Watched" visible="false" />
       <Group id="recentRoot" translation="[72, 696]" />

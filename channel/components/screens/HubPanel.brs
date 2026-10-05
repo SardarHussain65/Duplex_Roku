@@ -266,9 +266,6 @@ sub onSidebarPlaylists()
   items = payload.items
   m.sidebarLoading = false
   m.sidebarError = ""
-  if items.Count() = 0 and DuplexIsDev()
-    items = DuplexPreviewPlaylists()
-  end if
   m.playlists = items
   m.sidebarFocus = 0
   m.sidebarScroll = 0
@@ -420,8 +417,14 @@ sub renderSidebar()
 
   status = m.top.findNode("sidebarStatus")
   if m.sidebarLoading
-    status.visible = true
-    status.text = "Loading playlists..."
+    status.visible = false
+    for i = 0 to 3
+      row = root.createChild("Rectangle")
+      row.translation = [0, i * 88]
+      row.width = 488
+      row.height = 72
+      row.color = "0x3A3F4AFF"
+    end for
     return
   end if
   if m.sidebarError <> ""

@@ -20,30 +20,12 @@ sub loadContent()
 
   cats = DuplexFetchCategories(playlistId, contentType)
   if cats.error <> invalid
-    if DuplexIsDev()
-      m.top.categories = DuplexPreviewCategories()
-      if contentType = "MOVIE" or contentType = "SERIES"
-        m.top.channels = DuplexPreviewVodTitles(contentType)
-      else
-        m.top.channels = DuplexPreviewLiveChannels()
-      end if
-      return
-    end if
     m.top.error = cats.error
     return
   end if
 
   channels = DuplexFetchChannels(playlistId, contentType, m.top.page, m.top.limit, m.top.category, "")
   if channels.error <> invalid
-    if DuplexIsDev()
-      m.top.categories = DuplexPreviewCategories()
-      if contentType = "MOVIE" or contentType = "SERIES"
-        m.top.channels = DuplexPreviewVodTitles(contentType)
-      else
-        m.top.channels = DuplexPreviewLiveChannels()
-      end if
-      return
-    end if
     m.top.error = channels.error
     return
   end if
@@ -64,14 +46,6 @@ sub loadFavorites()
   fav = DuplexFetchFavorites(playlistId, page, limit, favType)
   if fav.error <> invalid
     DuplexLog("favorites error: " + fav.error)
-    if DuplexIsDev() and (playlistId = invalid or playlistId = "")
-      m.top.categories = [{ name: "All" }]
-      m.top.channels = DuplexPreviewFavorites()
-      m.top.totalLive = 3
-      m.top.totalMovies = 1
-      m.top.totalSeries = 1
-      return
-    end if
     m.top.error = fav.error
     return
   end if
@@ -121,11 +95,6 @@ sub loadParental()
     cats = DuplexFetchParentalCategories(playlistId, favType)
     if cats.error <> invalid
       DuplexLog("parental cats error: " + cats.error)
-      if DuplexIsDev() and (playlistId = invalid or playlistId = "")
-        m.top.categories = DuplexPreviewParentalCategories(favType)
-        m.top.channels = []
-        return
-      end if
       m.top.error = cats.error
       return
     end if
@@ -150,11 +119,6 @@ sub loadParental()
   list = DuplexFetchParentalControls(playlistId, page, limit, favType, category)
   if list.error <> invalid
     DuplexLog("parental items error: " + list.error)
-    if DuplexIsDev() and (playlistId = invalid or playlistId = "")
-      m.top.categories = []
-      m.top.channels = DuplexPreviewFavorites()
-      return
-    end if
     m.top.error = list.error
     return
   end if

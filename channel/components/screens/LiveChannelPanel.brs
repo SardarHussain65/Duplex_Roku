@@ -33,9 +33,17 @@ sub init()
   m.video = m.top.findNode("previewVideo")
   m.video.observeField("state", "onPreviewState")
 
-  m.task = m.top.createChild("ContentLoadTask")
-  m.task.observeField("channels", "onChannels")
-  m.task.observeField("error", "onError")
+  m.task = invalid
+  m.loading = false
+  m.actionBusy = false
+  m.favoriteId = ""
+  m.lockId = ""
+  m.actionTask = invalid
+  m.skeletonBright = false
+  m.skeletonTimer = m.top.createChild("Timer")
+  m.skeletonTimer.duration = 0.7
+  m.skeletonTimer.repeat = true
+  m.skeletonTimer.observeField("fire", "onSkeletonPulse")
 end sub
 
 sub styleLabel(label as Object, size as Integer, color as String)
@@ -67,23 +75,77 @@ sub onPanelShown()
   label = m.category
   if label = "" then label = "All"
   m.top.findNode("header").text = "Category  |  " + label
-  showStatus("Loading channels...")
+  m.channels = []
+  m.listIndex = 0
+  m.playIndex = 0
+  m.favoriteId = ""
+  m.lockId = ""
+  renderList()
+  clearPreview()
+  showChannelSkeleton()
+  startChannelLoad()
+end sub
 
+sub showChannelSkeleton()
+  bones = []
+  for i = 0 to 6
+    bones.Push({ x: 48, y: 120 + i * 116, w: 476, h: 100 })
+  end for
+  bones.Push({ x: 564, y: 120, w: 760, h: 428 })
+  bones.Push({ x: 1360, y: 128, w: 420, h: 28 })
+  bones.Push({ x: 1360, y: 176, w: 220, h: 22 })
+  bones.Push({ x: 1360, y: 248, w: 480, h: 48 })
+  bones.Push({ x: 1360, y: 320, w: 360, h: 22 })
+  bones.Push({ x: 1360, y: 478, w: 80, h: 80 })
+  bones.Push({ x: 1454, y: 478, w: 80, h: 80 })
+  bones.Push({ x: 564, y: 572, w: 1320, h: 300 })
+  DuplexFillSkeleton(m.top.findNode("skeletonRoot"), bones)
+  m.skeletonBright = false
+  m.skeletonTimer.control = "start"
+  m.top.findNode("statusLabel").visible = false
+end sub
+
+sub hideChannelSkeleton()
+  if m.skeletonTimer <> invalid then m.skeletonTimer.control = "stop"
+  DuplexHideSkeleton(m.top.findNode("skeletonRoot"))
+end sub
+
+sub onSkeletonPulse()
+  if not m.loading then return
+  m.skeletonBright = not m.skeletonBright
+  DuplexPulseSkeleton(m.top.findNode("skeletonRoot"), m.skeletonBright)
+end sub
+
+sub stopChannelTask()
+  if m.task = invalid then return
+  m.task.unobserveField("channels")
+  m.task.unobserveField("error")
+  m.task.control = "stop"
+  m.top.removeChild(m.task)
+  m.task = invalid
+end sub
+
+sub startChannelLoad()
+  stopChannelTask()
+  m.loading = true
+  m.task = m.top.createChild("ContentLoadTask")
+  m.task.observeField("channels", "onChannels")
+  m.task.observeField("error", "onError")
   m.task.playlistId = DuplexLoadActivePlaylistId()
   m.task.contentType = "LIVE"
   m.task.page = 1
   m.task.limit = 80
   m.task.category = m.category
   m.task.control = "RUN"
+end sub
 
-  if initial <> invalid
-    m.channels = [initial]
-    m.listIndex = 0
-    m.playIndex = 0
-    hideStatus()
-    renderList()
-    updateMeta()
-  end if
+sub clearPreview()
+  if m.video <> invalid then m.video.control = "stop"
+  m.top.findNode("previewTitle").text = ""
+  m.top.findNode("previewPoster").uri = ""
+  m.top.findNode("infoTitle").text = ""
+  m.top.findNode("infoDesc").text = ""
+  m.top.findNode("metaLine").text = ""
 end sub
 
 sub showStatus(text as String)
@@ -97,11 +159,12 @@ sub hideStatus()
 end sub
 
 sub onChannels()
+  if not m.loading or m.task = invalid then return
+  if m.task.channels = invalid then return
+  m.loading = false
+  hideChannelSkeleton()
   m.channels = m.task.channels
   if m.channels = invalid then m.channels = []
-  if m.channels.Count() = 0 and DuplexIsDev()
-    m.channels = DuplexPreviewLiveChannels()
-  end if
   m.listIndex = 0
   m.playIndex = 0
   m.scrollTop = 0
@@ -117,18 +180,15 @@ sub onChannels()
 end sub
 
 sub onError()
+  if not m.loading or m.task = invalid then return
   err = m.task.error
-  if err = invalid or err = "" then err = "Could not load channels"
+  if err = invalid or err = "" then return
+  m.loading = false
+  hideChannelSkeleton()
+  m.channels = []
+  renderList()
+  clearPreview()
   showStatus(err)
-  if DuplexIsDev()
-    m.channels = DuplexPreviewLiveChannels()
-    m.listIndex = 0
-    m.playIndex = 0
-    hideStatus()
-    renderList()
-    updateMeta()
-    startPreviewForSelection()
-  end if
 end sub
 
 sub focusInitialChannel()
@@ -281,6 +341,10 @@ sub updateMeta()
     poster.uri = uri
     epgLogo.uri = uri
   end if
+  m.favoriteId = ""
+  m.lockId = ""
+  updateFocus()
+  refreshLibraryStatus()
 end sub
 
 function todayLabel() as String
@@ -296,6 +360,8 @@ sub updateFocus()
   m.top.findNode("previewRing").visible = (m.focusZone = "preview")
   setCircle("favBg", m.focusZone = "actions" and m.actionIndex = 0)
   setCircle("lockBg", m.focusZone = "actions" and m.actionIndex = 1)
+  m.top.findNode("favOn").visible = (m.favoriteId <> "")
+  m.top.findNode("lockOn").visible = (m.lockId <> "")
   setRing("epgLogoRing", m.focusZone = "epg" and m.epgIndex = 0)
   setRing("epgNowRing", m.focusZone = "epg" and m.epgIndex = 1)
   setRing("epgNextRing", m.focusZone = "epg" and m.epgIndex = 2)
@@ -449,12 +515,86 @@ function handleKeyEvent(key as String) as Boolean
       openSelectedChannel()
     else if m.focusZone = "epg" and m.epgIndex > 0
       openSelectedChannel()
+    else if m.focusZone = "actions"
+      toggleLibraryAction()
     end if
     return true
   end if
 
   return false
 end function
+
+sub refreshLibraryStatus()
+  if m.channels.Count() = 0 then return
+  startLibraryAction("status", "")
+end sub
+
+sub toggleLibraryAction()
+  if m.actionBusy or m.channels.Count() = 0 then return
+  if m.actionIndex = 0
+    if m.favoriteId <> ""
+      startLibraryAction("removeFavorite", m.favoriteId)
+    else
+      startLibraryAction("addFavorite", "")
+    end if
+  else
+    if m.lockId <> ""
+      startLibraryAction("removeLock", m.lockId)
+    else
+      startLibraryAction("addLock", "")
+    end if
+  end if
+end sub
+
+sub startLibraryAction(action as String, recordId as String)
+  stopLibraryAction()
+  if m.channels.Count() = 0 then return
+  m.actionBusy = true
+  m.actionTask = m.top.createChild("LibraryActionTask")
+  m.actionTask.observeField("result", "onLibraryAction")
+  m.actionTask.action = action
+  m.actionTask.playlistId = DuplexLoadActivePlaylistId()
+  m.actionTask.item = m.channels[m.playIndex]
+  m.actionTask.recordId = recordId
+  m.actionTask.control = "RUN"
+end sub
+
+sub stopLibraryAction()
+  if m.actionTask = invalid then return
+  m.actionTask.unobserveField("result")
+  m.actionTask.control = "stop"
+  m.top.removeChild(m.actionTask)
+  m.actionTask = invalid
+end sub
+
+sub onLibraryAction()
+  if m.actionTask = invalid then return
+  result = m.actionTask.result
+  if result = invalid or result.action = invalid then return
+  m.actionBusy = false
+  if result.ok <> true
+    if result.error <> invalid and result.error <> "" then showStatus(result.error)
+    return
+  end if
+  if result.action = "status" or result.action = "addFavorite" or result.action = "removeFavorite"
+    if result.favoriteId <> invalid then m.favoriteId = result.favoriteId else m.favoriteId = ""
+  end if
+  if result.action = "status" or result.action = "addLock" or result.action = "removeLock"
+    if result.lockId <> invalid then m.lockId = result.lockId else m.lockId = ""
+  end if
+  if result.action = "addFavorite" or result.action = "removeFavorite"
+    id = ""
+    if result.recordId <> invalid then id = result.recordId
+    m.favoriteId = id
+  end if
+  if result.action = "addLock" or result.action = "removeLock"
+    id = ""
+    if result.recordId <> invalid then id = result.recordId
+    m.lockId = id
+  end if
+  hideStatus()
+  updateFocus()
+end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
   if not press then return false

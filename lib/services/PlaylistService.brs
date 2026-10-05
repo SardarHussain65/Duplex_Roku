@@ -1,8 +1,5 @@
 function DuplexFetchPlaylists(deviceId as String) as Object
     if deviceId = ""
-        if DuplexIsDev()
-            return { data: DuplexPreviewPlaylists() }
-        end if
         return { error: "Device not registered" }
     end if
 

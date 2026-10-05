@@ -41,6 +41,26 @@ function DuplexFormatDeviceKey(raw as String) as String
     return Left(clean, 4) + "-" + Right(clean, 4)
 end function
 
+function DuplexIsMacAddress(raw as String) as Boolean
+    if raw = invalid then return false
+    value = raw.Trim()
+    if Len(value) <> 17 then return false
+    ' Match Web MAC_PATTERN: /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/i
+    for i = 0 to 16
+        ch = Mid(value, i + 1, 1)
+        if i = 2 or i = 5 or i = 8 or i = 11 or i = 14
+            if ch <> ":" then return false
+        else
+            code = Asc(ch)
+            isDigit = (code >= 48 and code <= 57)
+            isUpper = (code >= 65 and code <= 70)
+            isLower = (code >= 97 and code <= 102)
+            if not (isDigit or isUpper or isLower) then return false
+        end if
+    end for
+    return true
+end function
+
 function DuplexGetHardwareId() as String
     ' Simulator / constrained hosts keep the shared placeholder MAC.
     if DuplexIsSimulator() or DuplexIsDev()
@@ -63,7 +83,10 @@ function DuplexGetHardwareId() as String
 end function
 
 function DuplexGetDisplayCode(hardwareId as String) as String
-    ' Match Web TV formatDisplayCode — always DPX - XXXXYYYY (even for colon MACs).
+    ' Match Web TV displayCodeFor — MAC stays colon form; DUID/UUID → DPX - XXXXYYYY.
+    if DuplexIsMacAddress(hardwareId)
+        return UCase(hardwareId.Trim())
+    end if
     return DuplexFormatDisplayCode(hardwareId)
 end function
 

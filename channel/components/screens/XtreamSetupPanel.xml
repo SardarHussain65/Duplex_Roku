@@ -17,7 +17,7 @@
 
         <!-- Identity pill -->
         <Poster id="pillBg" translation="[110, 84]" width="700" height="44" uri="pkg:/images/ui/xtream-pill.png" loadDisplayMode="scaleToFit" />
-        <Label id="pillMac" translation="[130, 94]" width="300" height="28" text="MAC Address: DPX - 02000000" />
+        <Label id="pillMac" translation="[130, 94]" width="300" height="28" text="MAC Address: 02:00:00:00:00:00" />
         <Rectangle id="pillDivider" translation="[440, 98]" width="1" height="16" color="0x353945FF" />
         <Label id="pillKey" translation="[460, 94]" width="320" height="28" text="Device Key: N/A" />
 

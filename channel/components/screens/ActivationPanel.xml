@@ -28,7 +28,7 @@
         vertAlign="top"
         wrap="true"
         maxLines="4"
-        text="Visit our website www.duplexnew.tv/manageplaylists to add/manage playlists." />
+        text="Visit our website www.duplexnew.com/manageplaylist to add/manage playlists." />
 
       <!-- Green trial banner (trial + no expiry countdown) -->
       <Group id="bannerGroup" translation="[0, 310]" visible="false">
@@ -76,7 +76,7 @@
         wrap="true"
         maxLines="2"
         visible="false"
-        text="Visit our website www.duplexnew.tv/manageplaylists to add/manage playlists." />
+        text="Visit our website www.duplexnew.com/manageplaylist to add/manage playlists." />
 
       <!-- Action buttons (rounded Poster chrome; positions/uris set in script) -->
       <Group id="btn0" translation="[0, 800]" visible="false">

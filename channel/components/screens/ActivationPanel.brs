@@ -164,7 +164,7 @@ sub applyScreenState()
   else if m.screenState = "inactive"
     copyNode.text = "Device is inactive by admin. Please contact admin."
   else
-    copyNode.text = "Visit our website www.duplexnew.tv/manageplaylists to add/manage playlists."
+    copyNode.text = "Visit our website www.duplexnew.com/manageplaylist to add/manage playlists."
   end if
 
   showIds = (m.screenState <> "inactive")
